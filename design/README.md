@@ -1,64 +1,51 @@
 # UI mockup — for reference, not reuse
 
-This is the clickable prototype of the AnalystAudit frontend, built with
-Claude Design (a Claude Code skill). Live version (requires a Claude login
-to view): https://claude.ai/code/artifact/5a74ed4b-3c44-4221-afc4-9bdcdfba3003
+This is the clickable prototype of the AnalystAudit frontend. Original,
+built with Claude Design (a Claude Code skill), requires a Claude login to
+view: https://claude.ai/code/artifact/5a74ed4b-3c44-4221-afc4-9bdcdfba3003
 
-For viewing without a login (e.g. handing this to another coding tool), two
-options — **do not open `mockup/Main.dc.html` directly**, it's raw template
-source, not a webpage (see warning below):
+## The best way to hand this to another tool
 
-- `mockup/screenshots/` — a PNG per screen.
-- `mockup/static-html/` — a real, resolved HTML file per screen (open
-  directly in any browser, no login, no build step). Fully-resolved copy,
-  layout, and CSS; not interactive (buttons don't do anything) since it's a
-  snapshot, not the running app.
+**`mockup/prototype/index.html`** — a real, fully clickable prototype with
+no login, no build step, no dependencies besides a Google Fonts CDN link.
+Open it directly in any browser (double-click, or `open
+design/mockup/prototype/index.html`). It's a from-scratch port of the
+Claude Design mockup's exact behavior into plain HTML/CSS/vanilla JS —
+same screens, copy, styling, and interactions:
 
-Both cover all 5 screens: watchlist, browse-all, expert-profile,
-claim-detail, add-link-flow.
+- Navigate Watchlist / Browse all / Expert profile / Claim detail / Add flow
+- Search and filter, toggle an expert's follow state
+- Full "Add a link" auto-detect flow: paste a URL, it matches known experts
+  or asks for a name if unrecognized, with the "Not them?" override
+- Claim filter tabs (All / Open / Resolved), draft-claim checklist toggling
+  in the review step
+
+It's a single ~700-line file (state object + small render functions +
+event delegation via `data-act` attributes) — plain enough for a coding
+tool to read as reference *and* to edit directly if useful, unlike the
+original's proprietary templating format. It uses the same hardcoded
+fixture data as the original (no real backend), so it's still a mockup, not
+the app.
+
+## Other formats (screenshots / static per-screen HTML)
+
+- `mockup/screenshots/` — a PNG per screen, for a quick look without
+  opening anything.
+- `mockup/static-html/` — one resolved, non-interactive HTML file per
+  screen (a frozen snapshot, buttons don't do anything). Mostly superseded
+  by `prototype/index.html` above, which covers the same ground and is
+  actually clickable.
 
 ## Don't open Main.dc.html in a browser
 
-`mockup/Main.dc.html` is Claude Design's own template source — it only
-renders correctly inside Claude Design's runtime. Opened directly in a
-plain browser, `{{handlebars}}` holes show up as literal text and the
-`<sc-if>`/`<sc-for>` conditionals/loops don't run (every screen's markup
-renders all at once, unfiltered) — it looks broken because it is missing
-the piece that resolves it. Use `static-html/` for a working preview, and
-`Main.dc.html` only for reading the source (next section).
-
-**What it's good for:** it is the source of truth for every screen, field,
-label, copy string, state transition, and interaction in the product —
-more precise than any written spec, because it's the actual thing the user
-clicked through and approved. Read it to answer "what does this screen show",
-"what's the exact wording here", "what happens when the user does X".
-
-**What it's NOT good for:** the file is not meant to be ported or adapted as
-implementation code. It's written in Claude Design's own templating format
-(`<x-dc>`, `{{handlebars}}` holes, `<sc-if>`/`<sc-for>`), and its data is a
-`class Component extends DCLogic` doing everything client-side with hardcoded
-fixture data (fake gurus/claims — no real backend, no persistence). Treat the
-markup structure, CSS values (colors, spacing, type), and the `renderVals()`
-logic as the spec to *reimplement* in whatever stack the real app uses — not
-as code to copy in.
-
-## How to read it
-
-- The `<helmet>` block has the full design system: color tokens (dark
-  "trading terminal" theme), fonts (Space Grotesk + JetBrains Mono via
-  Google Fonts), and base styles.
-- The markup is one big `<sc-if>` chain, one block per screen: **Watchlist**,
-  **Browse all**, **Expert profile**, **Claim detail**, **Add flow**. Each
-  screen's exact fields and layout are in its block.
-- The `<script data-dc-script>` block at the bottom is the actual behavior:
-  `getGurus()`/`getClaims()`/`getDraftClaims()` are the fixture data shape
-  (a decent starting point for the real data model's fields), and
-  `renderVals()` computes everything the templates bind to — this is where
-  navigation, filtering, search, follow-toggle, and the multi-phase "Add a
-  link" auto-detect flow (`detectSourceType`/`detectExpert`/`runDetection`)
-  are all implemented.
-- `canvas.json` is just Claude Design's layout manifest (single artboard) —
-  no product information in it.
+`mockup/Main.dc.html` is Claude Design's own template source (the original
+artifact's source of truth) — it only renders correctly inside Claude
+Design's runtime. Opened directly in a plain browser, `{{handlebars}}`
+holes show up as literal text and `<sc-if>`/`<sc-for>` conditionals/loops
+don't run — it looks broken because it's missing the piece that resolves
+it. Use `prototype/index.html` instead for anything that needs to actually
+work in a browser; read `Main.dc.html` only if you want the original
+source next to the port (same content, different implementation).
 
 ## Architecture and product decisions
 

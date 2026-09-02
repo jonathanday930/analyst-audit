@@ -46,6 +46,28 @@ A fourth stage — combining several trusted gurus' currently-open claims into a
 buy/sell make sense right now" read — was discussed and explicitly deferred. Once 1-3 exist,
 it's expected to be a prompt over existing data, not new infrastructure.
 
+### Onboarding a new guru: channel/feed URL, not a single video URL
+
+Adding a brand-new guru asks for a URL that lets claim finder keep tracking them afterward, not
+just seed one claim: a **YouTube channel URL** for video-based gurus, and a **blog RSS/feed
+URL** for blog-based ones (most blogging platforms generate one — e.g. `/feed` or `/rss` — even
+when it isn't linked from the page). Feed URLs were chosen over scraping the blog's homepage
+because they're a structured, standard mechanism for "here are all my posts" rather than
+something that breaks whenever a site's layout changes. Adding a single new post/video to a
+guru you already track (via that guru's own profile page, not the "Add analyst" flow) still
+asks for the one specific video/post URL, since there's no channel-level re-registration needed
+there.
+
+### Evaluation includes a benchmark comparison
+
+When claim analyzer resolves a claim, its evaluation should include not just the verdict but
+whether the trade beat a relevant benchmark over the same window (S&P 500 / Nasdaq for
+equity-ish claims, a major cryptocurrency for crypto claims) — a call can be a "good call" in
+isolation but still have been worse than just holding an index fund, and that's a distinct,
+useful signal from the raw verdict. Not every claim needs this (e.g. a rates/yield claim isn't
+naturally expressed as a comparable return), so it's an optional part of the evaluation, not a
+required field.
+
 ## Claim schema (what claim finder produces)
 
 Per claim: asset/instrument description + best-guess ticker (kept as a plain best guess, same

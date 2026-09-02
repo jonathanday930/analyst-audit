@@ -57,6 +57,8 @@ const state = {
   addName: '',
   addSourceType: 'video',
   addUrl: '',
+  addTrackingUrl: '',
+  addTrackingSkipped: false,
   addSelected: {},
   addSavedCount: 0,
 };
@@ -164,13 +166,15 @@ function goBrowse() { setState({ screen: 'browse', listScreen: 'browse' }); }
 function goAddLink() {
   setState({
     screen: 'add', addMode: 'auto', addPhase: 'link', addTarget: null, addGuruId: null,
-    addDetectedGuruId: null, addName: '', addSourceType: 'video', addUrl: '', addSelected: {},
+    addDetectedGuruId: null, addName: '', addSourceType: 'video', addUrl: '',
+    addTrackingUrl: '', addTrackingSkipped: false, addSelected: {},
   });
 }
 function goAddToGuru(guruId) {
   setState({
     screen: 'add', addMode: 'direct', addPhase: 'details', addTarget: 'existing', addGuruId: guruId,
-    addName: '', addSourceType: 'video', addUrl: '', addSelected: {},
+    addName: '', addSourceType: 'video', addUrl: '',
+    addTrackingUrl: '', addTrackingSkipped: false, addSelected: {},
   });
 }
 function toggleFollow(id) {
@@ -220,7 +224,12 @@ function handleAction(act, id) {
     case 'runDetection': runDetection(); break;
     case 'useDifferentExpert': setState({ addTarget: 'new', addGuruId: null, addDetectedGuruId: null }); break;
     case 'backToLink': setState({ addPhase: 'link' }); break;
-    case 'continueFromDetect': setState({ addPhase: 'processing' }); break;
+    case 'continueFromDetect':
+      setState({ addPhase: state.addTarget === 'new' ? 'trackingSetup' : 'processing' });
+      break;
+    case 'backFromTracking': setState({ addPhase: 'detect' }); break;
+    case 'skipTracking': setState({ addTrackingSkipped: true, addPhase: 'processing' }); break;
+    case 'continueFromTracking': setState({ addTrackingSkipped: false, addPhase: 'processing' }); break;
     case 'setSourceVideo': setState({ addSourceType: 'video' }); break;
     case 'setSourceBlog': setState({ addSourceType: 'blog' }); break;
     case 'backFromDetails': setState({ screen: 'profile', selectedGuruId: state.addGuruId }); break;
@@ -328,14 +337,16 @@ function computeVals() {
   const addGuruContext = gurusRaw.find((g) => g.id === s.addGuruId);
   const detectedExpert = gurus.find((g) => g.id === s.addGuruId) || null;
 
-  const autoOrder = ['link', 'detect', 'processing', 'review', 'done'];
+  const autoOrderMatched = ['link', 'detect', 'processing', 'review', 'done'];
+  const autoOrderNew = ['link', 'detect', 'trackingSetup', 'processing', 'review', 'done'];
   const directOrder = ['details', 'processing', 'review', 'done'];
-  const phaseOrder = s.addMode === 'auto' ? autoOrder : directOrder;
+  const phaseOrder = s.addMode === 'auto' ? (addTargetNew ? autoOrderNew : autoOrderMatched) : directOrder;
   const phaseIndex = phaseOrder.indexOf(s.addPhase) + 1;
   const totalSteps = phaseOrder.length;
 
   const detailsContinueDisabled = !s.addUrl;
   const detectContinueDisabled = addTargetNew && s.addName.trim().length === 0;
+  const trackingContinueDisabled = !s.addTrackingUrl;
 
   const draftClaims = draftRaw.map((d) => {
     const hzd = horizonStyle(d.horizon);
@@ -356,7 +367,7 @@ function computeVals() {
     addModeAuto: s.addMode === 'auto',
     addStepNum: String(phaseIndex),
     addTotalSteps: String(totalSteps),
-    addDot: [1, 2, 3, 4, 5].map((n) => (phaseIndex >= n ? 'var(--accent)' : 'var(--border)')),
+    addDot: Array.from({ length: totalSteps }, (_, i) => (phaseIndex >= i + 1 ? 'var(--accent)' : 'var(--border)')),
     flowLabel: s.addMode === 'auto' ? 'Add a link' : 'Add a video or post',
     addTargetNew, addTargetExisting, addGuruContext, detectedExpert,
     detectTitle: addTargetExisting ? 'We recognized this source' : 'New expert details',
@@ -364,16 +375,23 @@ function computeVals() {
     detailsTitle: 'Add to ' + (addGuruContext ? addGuruContext.name : ''),
     urlLabel: s.addSourceType === 'video' ? 'YouTube video URL' : 'Blog post URL',
     urlPlaceholder: s.addSourceType === 'video' ? 'https://youtube.com/watch?v=...' : 'https://example.com/blog/post',
-    detailsContinueDisabled, detectContinueDisabled,
+    detailsContinueDisabled, detectContinueDisabled, trackingContinueDisabled,
     linkContinueDisabled: !s.addUrl,
     showProcessingIntro: s.addMode === 'auto',
     processingIntro: addTargetExisting
       ? 'Matched to ' + (addGuruContext ? addGuruContext.name : '')
-      : 'Registered ' + (s.addName || 'this expert') + ' as new',
+      : s.addTrackingUrl
+        ? 'Registered ' + (s.addName || 'this expert') + ' with tracking enabled'
+        : 'Registered ' + (s.addName || 'this expert') + ' as new',
     draftClaims, selectedDraftCount,
     confirmLabel: 'Save ' + selectedDraftCount + (selectedDraftCount === 1 ? ' claim' : ' claims'),
     doneBackLabel: addTargetExisting ? 'Back to profile' : 'Back to Watchlist',
     doneAgainLabel: addTargetExisting ? 'Add another video/post' : 'Add another link',
+    doneTrackingNote: addTargetNew
+      ? (s.addTrackingUrl
+          ? (s.addName || 'This expert') + ' will be tracked automatically going forward.'
+          : 'Tracking isn’t set up yet — add ' + (s.addName || 'their') + ' channel or feed URL anytime from their profile to enable it.')
+      : null,
   };
 }
 
@@ -648,8 +666,7 @@ function checklistItem(text) {
 }
 
 function renderAdd(vals) {
-  const dots = vals.addDot.map((c) => `<div style="height:3px;flex:1;border-radius:2px;background:${c};"></div>`);
-  const dotsHtml = vals.addModeAuto ? dots.join('') : dots.slice(0, 4).join('');
+  const dotsHtml = vals.addDot.map((c) => `<div style="height:3px;flex:1;border-radius:2px;background:${c};"></div>`).join('');
   const enabledBtn = 'background:var(--accent);color:#1a1305;border:none;border-radius:7px;padding:11px 18px;font-size:13px;font-weight:600;';
   const disabledBtn = enabledBtn + 'opacity:0.4;';
 
@@ -684,6 +701,17 @@ function renderAdd(vals) {
       <div style="display:flex;gap:10px;">
         <button data-act="backToLink" style="padding:11px 18px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-muted);font-size:13px;">Back</button>
         <button data-act="continueFromDetect" ${vals.detectContinueDisabled ? 'disabled' : ''} style="${vals.detectContinueDisabled ? disabledBtn : enabledBtn}">Continue</button>
+      </div>`;
+  } else if (state.addPhase === 'trackingSetup') {
+    phaseHtml = `
+      <div style="font-size:20px;font-weight:600;margin-bottom:8px;">Keep ${escapeHtml(state.addName || 'this expert')} tracked automatically</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:24px;line-height:1.5;">Add their YouTube channel or blog RSS/feed URL so claim finder can keep checking their new content on its own. You can skip this and add it later from their profile.</div>
+      <label style="font-size:12px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;">Channel or feed URL (optional)</label>
+      <input id="add-tracking-input" type="text" value="${escapeAttr(state.addTrackingUrl)}" data-bind="addTrackingUrl" placeholder="https://youtube.com/@channel or an RSS/feed URL" style="width:100%;margin:8px 0 24px;padding:11px 13px;border-radius:7px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:13.5px;" />
+      <div style="display:flex;gap:10px;">
+        <button data-act="backFromTracking" style="padding:11px 18px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-muted);font-size:13px;">Back</button>
+        <button data-act="skipTracking" style="padding:11px 18px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-muted);font-size:13px;">Skip for now</button>
+        <button data-act="continueFromTracking" ${vals.trackingContinueDisabled ? 'disabled' : ''} style="${vals.trackingContinueDisabled ? disabledBtn : enabledBtn}">Continue</button>
       </div>`;
   } else if (state.addPhase === 'details') {
     phaseHtml = `
@@ -749,7 +777,8 @@ function renderAdd(vals) {
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--good)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg>
         </div>
         <div style="font-size:19px;font-weight:600;margin-bottom:8px;">${state.addSavedCount} claims added</div>
-        <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:26px;">Claim analyzer will start checking these against their target windows automatically.</div>
+        <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:${vals.doneTrackingNote ? '10px' : '26px'};">Claim analyzer will start checking these against their target windows automatically.</div>
+        ${vals.doneTrackingNote ? `<div style="font-size:13px;color:var(--text-faint);margin-bottom:26px;">${vals.doneTrackingNote}</div>` : ''}
         <div style="display:flex;gap:10px;justify-content:center;">
           <button data-act="doneBack" style="padding:11px 18px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text);font-size:13px;">${vals.doneBackLabel}</button>
           <button data-act="doneAgain" style="background:var(--accent);color:#1a1305;border:none;border-radius:7px;padding:11px 18px;font-size:13px;font-weight:600;">${vals.doneAgainLabel}</button>

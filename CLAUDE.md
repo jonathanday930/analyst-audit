@@ -46,17 +46,27 @@ A fourth stage — combining several trusted gurus' currently-open claims into a
 buy/sell make sense right now" read — was discussed and explicitly deferred. Once 1-3 exist,
 it's expected to be a prompt over existing data, not new infrastructure.
 
-### Onboarding a new guru: channel/feed URL, not a single video URL
+### Onboarding a new guru: two-step, channel/feed URL is not required up front
 
-Adding a brand-new guru asks for a URL that lets claim finder keep tracking them afterward, not
-just seed one claim: a **YouTube channel URL** for video-based gurus, and a **blog RSS/feed
-URL** for blog-based ones (most blogging platforms generate one — e.g. `/feed` or `/rss` — even
-when it isn't linked from the page). Feed URLs were chosen over scraping the blog's homepage
+There is no separate "Add analyst" registration flow anymore — the UI has one universal entry
+point, "Add a link": paste any single video or blog post URL, and it tries to match the source
+against gurus already on file (via `detectExpert`/`detectSourceType` in the mockup — a
+placeholder substring match, not the real matching algorithm the backend needs). If it matches,
+the claim(s) get attached to that guru's existing history. If it doesn't match, the flow asks
+for **just a name** to register the guru — deliberately not a channel/feed URL, so a first-time
+add stays a single paste-and-go action.
+
+Registration is still two steps overall, split across two screens: after the name is captured,
+a follow-up screen ("Keep \[name\] tracked automatically") asks for that guru's **YouTube
+channel URL** or **blog RSS/feed URL** — the URL that lets claim finder keep tracking them going
+forward, not just seed one claim. Feed URLs were chosen over scraping the blog's homepage
 because they're a structured, standard mechanism for "here are all my posts" rather than
-something that breaks whenever a site's layout changes. Adding a single new post/video to a
-guru you already track (via that guru's own profile page, not the "Add analyst" flow) still
-asks for the one specific video/post URL, since there's no channel-level re-registration needed
-there.
+something that breaks whenever a site's layout changes. This second screen is skippable ("Skip
+for now") — a guru can exist with no channel/feed URL on file, and the real backend needs a
+`tracking_status` (e.g. `active` / `not_configured`) on the guru record so the profile page can
+show that state and offer to complete it later. Adding a single new post/video to a guru you
+already track (via that guru's own profile page) skips both of these steps and just asks for the
+one specific video/post URL, since there's no re-registration needed there.
 
 ### Evaluation includes a benchmark comparison
 
@@ -100,7 +110,54 @@ part of the model's reasoning.
   be revisited later purely for source-polling triggers (e.g. watching a YouTube channel or
   blog RSS feed for new content) if that becomes painful to hand-roll — not needed for MVP.
 
+## Frontend and data model notes (for building the real app)
+
+The UI/UX is fully designed and approved — implement it, don't redesign it. The canonical
+reference is `design/mockup/prototype/index.html`, a real clickable prototype (plain HTML/CSS/
+vanilla JS, opens in any browser, no login or build step) covering all 5 screens: Watchlist,
+Browse all, Expert profile, Claim detail, and the Add-link flow (including the two-step
+onboarding described above — paste-a-link-and-detect, then an optional, skippable
+channel/feed-URL step). Read `design/README.md` first for how to use it and what's superseded;
+`design/mockup/Main.dc.html` is the original source in Claude Design's own templating format —
+don't open it directly in a browser, it won't render (see that README for why).
+
+Match the prototype's design tokens exactly rather than re-deriving them: the CSS custom
+properties at the top of `prototype/index.html` (`--bg`, `--card`, `--accent`, `--good`, `--bad`,
+etc.) are the actual approved dark "trading terminal" palette, plus Space Grotesk (UI text) and
+JetBrains Mono (data/numbers/tickers) from Google Fonts.
+
+Everything in the prototype is hardcoded fixture data with no persistence —
+`getGurus()`/`getClaims()`/`getDraftClaims()` show the shape of the real data, but a few fields
+are display-only strings in the mockup that need to become structured fields in the real schema:
+- `windowText` (e.g. "Oct 15 – Dec 20, 2026", "Open-ended — rechecked periodically", "Trigger
+  not yet met") needs real `target_window_start`/`target_window_end` dates, nullable for
+  open-ended or not-yet-triggered claims — see the fuzzy-window rationale in the claim schema
+  section above.
+- `status` (open/resolved) and `verdict` (good/bad, set only once resolved) are separate fields —
+  don't conflate into one enum.
+- `benchmarks` is optional per claim, only present when there's a comparable return (per
+  "Evaluation includes a benchmark comparison" above) — not every claim needs one.
+- The guru record needs the `tracking_status` field (e.g. `active` / `not_configured`) described
+  in the onboarding section above, plus wherever a channel/feed URL is actually stored.
+- The mockup's `detectExpert()` (URL-substring matching against a guru's name/id) is a UI
+  placeholder, not the real matching algorithm — the real version needs to match against actual
+  channel IDs / feed URLs on file, not guess from the pasted URL's text.
+
+This is a genuinely persistent app — unlike `../youtube_fact_checker` (its sibling, deliberately
+stateless), claim history has to survive across the claim analyzer's recurring re-checks, so a
+real database is required, not an in-memory/session store. Reuse the Claude structured-output
+client pattern, ticker resolution, yfinance price fetching, and YouTube transcript/metadata
+fetching from `youtube_fact_checker`'s backend per "What this is" above — don't rebuild those
+from scratch.
+
+**Division of labor**: Codex is building the frontend and the database/persistence layer (real
+schema, CRUD, the screens above wired to real data). The claim finder / claim analyzer / meta
+guru analysis prompts — the actual AI extraction and evaluation logic — are being handled
+separately, iteratively, elsewhere. Codex's backend work should leave clean seams (API
+endpoints, job hooks) for those to plug into rather than building throwaway stand-ins for them,
+but shouldn't attempt to implement the extraction/evaluation prompts itself.
+
 ## Status
 
-Pre-code. Architecture and claim schema above were worked out in design conversation; nothing
-has been implemented yet. No backend/frontend scaffolding exists in this repo yet.
+UI/UX design is done (see prototype above). Backend, database, and real frontend build have not
+started — this is the next step, split as described in "Division of labor" above.

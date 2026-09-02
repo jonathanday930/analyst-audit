@@ -1,8 +1,13 @@
 # UI mockup — for reference, not reuse
 
 `mockup/Main.dc.html` is the clickable prototype of the AnalystAudit frontend,
-built with Claude Design (a Claude Code skill). Live version:
+built with Claude Design (a Claude Code skill). Live version (requires a
+Claude login to view):
 https://claude.ai/code/artifact/5a74ed4b-3c44-4221-afc4-9bdcdfba3003
+
+`mockup/screenshots/` has a static PNG of each of the 5 screens
+(watchlist, browse-all, expert-profile, claim-detail, add-link-flow) for a
+quick visual reference that doesn't need any login.
 
 **What it's good for:** it is the source of truth for every screen, field,
 label, copy string, state transition, and interaction in the product —

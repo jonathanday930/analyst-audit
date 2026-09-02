@@ -1,0 +1,935 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    :root {
+      --bg: #101418; --bg2: #171c22; --card: #1b2129; --card-hover: #212832;
+      --border: #2a323d; --text: #e7ebf0; --text-muted: #8b96a3; --text-faint: #5b6572;
+      --accent: #e3a63a; --accent-soft: rgba(227,166,58,0.14);
+      --good: #4fbf7a; --good-soft: rgba(79,191,122,0.14);
+      --bad: #e0616b; --bad-soft: rgba(224,97,107,0.14);
+      --pending: #8b96a3; --pending-soft: rgba(139,150,163,0.12);
+    }
+    .gl-root, .gl-root button, .gl-root input { font-family: 'Space Grotesk', system-ui, sans-serif; }
+    .gl-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+    .gl-root a { color: var(--accent); text-decoration: none; }
+    .gl-root a:hover { color: #f0bb5e; }
+    .gl-root button { cursor: pointer; }
+    .gl-root ::-webkit-scrollbar { width: 10px; height: 10px; }
+    .gl-root ::-webkit-scrollbar-track { background: var(--bg); }
+    .gl-root ::-webkit-scrollbar-thumb { background: #2a323d; border-radius: 6px; }
+    .gl-card:hover { background: var(--card-hover) !important; border-color: #3a4451 !important; }
+    .gl-navitem:hover { background: var(--card) !important; }
+    .gl-claimrow:hover { background: var(--card-hover) !important; }
+  </style>
+</helmet>
+
+<div class="gl-root" style="display:flex; width:100%; min-height:100vh; background:var(--bg); color:var(--text);">
+
+  <!-- Sidebar -->
+  <div style="width:232px; flex-shrink:0; display:flex; flex-direction:column; background:var(--bg2); border-right:1px solid var(--border); padding:22px 16px;">
+    <div style="padding:0 8px 24px;">
+      <div class="gl-mono" style="font-weight:600; font-size:15px; letter-spacing:0.02em;">ANALYST<span style="color:var(--accent);">·</span>AUDIT</div>
+      <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.08em; margin-top:4px;">track record engine</div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:2px;">
+      <button class="gl-navitem" onClick="{{goWatchlist}}" style="{{navWatchlistStyle}}">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"></path></svg>
+        <span>Watchlist</span>
+      </button>
+      <button class="gl-navitem" onClick="{{goBrowse}}" style="{{navBrowseStyle}}">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
+        <span>Browse all</span>
+      </button>
+      <button class="gl-navitem" onClick="{{goAddLink}}" style="{{navAddStyle}}">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+        <span>Add a link</span>
+      </button>
+    </div>
+
+    <div style="flex:1;"></div>
+
+    <div style="padding:12px 8px; border-top:1px solid var(--border);">
+      <div class="gl-mono" style="font-size:12px; color:var(--text-muted);">{{statLine}}</div>
+      <div style="font-size:11px; color:var(--text-faint); margin-top:4px;">Single-user &middot; MVP</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div style="flex:1; min-width:0; overflow-y:auto; height:100vh;">
+
+    <!-- ============ WATCHLIST ============ -->
+    <sc-if value="{{screenWatchlist}}" hint-placeholder-val="{{true}}">
+      <div style="padding:40px 48px 64px; max-width:1220px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:26px;">
+          <div>
+            <div style="font-size:12px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;">Your assortment</div>
+            <div style="font-size:27px; font-weight:600;">Watchlist</div>
+          </div>
+          <button onClick="{{goBrowse}}" style="display:flex; align-items:center; gap:8px; background:none; border:1px solid var(--border); color:var(--text); border-radius:7px; padding:11px 18px; font-size:13px; font-weight:600;">
+            Browse all experts
+          </button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; padding:9px 12px; border-radius:7px; border:1px solid var(--border); background:var(--bg2); width:280px; margin-bottom:24px;">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--text-faint)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+          <input type="text" value="{{searchQuery}}" onChange="{{handleSearchChange}}" placeholder="Search experts" style="flex:1; min-width:0; border:none; outline:none; background:none; color:var(--text); font-size:13px;" />
+        </div>
+
+        <sc-if value="{{watchlistEmpty}}" hint-placeholder-val="{{false}}">
+          <div style="padding:48px; text-align:center; color:var(--text-muted); font-size:13.5px; border:1px dashed var(--border); border-radius:10px;">
+            Your watchlist is empty.
+            <div style="margin-top:14px;"><button onClick="{{goBrowse}}" style="background:var(--accent); color:#1a1305; border:none; border-radius:7px; padding:10px 16px; font-size:13px; font-weight:600;">Browse all experts</button></div>
+          </div>
+        </sc-if>
+        <sc-if value="{{watchlistNoMatches}}" hint-placeholder-val="{{false}}">
+          <div style="padding:48px; text-align:center; color:var(--text-muted); font-size:13.5px; border:1px dashed var(--border); border-radius:10px;">No experts in your watchlist match &ldquo;{{searchQuery}}&rdquo;.</div>
+        </sc-if>
+
+        <div style="display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:18px;">
+          <sc-for list="{{watchlistGurus}}" as="guru" hint-placeholder-count="3">
+            <div class="gl-card" onClick="{{guru.select}}" style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:20px; cursor:pointer; display:flex; flex-direction:column; gap:14px; transition:background .12s, border-color .12s;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div class="gl-mono" style="width:38px; height:38px; border-radius:50%; background:var(--bg2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:12px; color:var(--accent); flex-shrink:0;">{{guru.initials}}</div>
+                <div style="flex:1; min-width:0;">
+                  <div style="font-weight:600; font-size:15px;">{{guru.name}}</div>
+                  <div style="font-size:11.5px; color:var(--text-faint); margin-top:1px;">{{guru.lastActive}} &middot; {{guru.sourceLabel}}</div>
+                </div>
+                <button onClick="{{guru.toggleFollow}}" title="{{guru.followLabel}}" style="{{guru.followBtnStyle}}">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="{{guru.starFill}}" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"></path></svg>
+                </button>
+              </div>
+
+              <div>
+                <div style="display:flex; align-items:baseline; gap:7px;">
+                  <div class="gl-mono" style="font-size:32px; font-weight:600; line-height:1; color:{{guru.scoreColor}};">{{guru.score}}</div>
+                  <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em;">reliability</div>
+                </div>
+                <div style="height:4px; border-radius:2px; background:var(--border); overflow:hidden; margin-top:9px;">
+                  <div style="height:100%; width:{{guru.scoreBarWidth}}; background:{{guru.scoreColor}};"></div>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <sc-for list="{{guru.categories}}" as="cat" hint-placeholder-count="2">
+                  <div class="gl-mono" style="font-size:10.5px; padding:4px 8px; border-radius:999px; background:var(--bg2); border:1px solid var(--border); color:var(--text-muted);">{{cat.label}} {{cat.pct}}%</div>
+                </sc-for>
+              </div>
+
+              <div style="font-size:12px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:12px;">{{guru.claimsSummary}}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ BROWSE ALL ============ -->
+    <sc-if value="{{screenBrowse}}" hint-placeholder-val="{{false}}">
+      <div style="padding:40px 48px 64px; max-width:1220px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:26px;">
+          <div>
+            <div style="font-size:12px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;">Catalog</div>
+            <div style="font-size:27px; font-weight:600;">Browse all experts</div>
+          </div>
+          <button onClick="{{goAddLink}}" style="display:flex; align-items:center; gap:8px; background:var(--accent); color:#1a1305; border:none; border-radius:7px; padding:11px 18px; font-size:13px; font-weight:600;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+            Add a link
+          </button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; padding:9px 12px; border-radius:7px; border:1px solid var(--border); background:var(--bg2); width:280px; margin-bottom:24px;">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--text-faint)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+          <input type="text" value="{{searchQuery}}" onChange="{{handleSearchChange}}" placeholder="Search experts" style="flex:1; min-width:0; border:none; outline:none; background:none; color:var(--text); font-size:13px;" />
+        </div>
+
+        <sc-if value="{{browseNoMatches}}" hint-placeholder-val="{{false}}">
+          <div style="padding:48px; text-align:center; color:var(--text-muted); font-size:13.5px; border:1px dashed var(--border); border-radius:10px;">No experts match &ldquo;{{searchQuery}}&rdquo;.</div>
+        </sc-if>
+
+        <div style="display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:18px;">
+          <sc-for list="{{browseGurus}}" as="guru" hint-placeholder-count="5">
+            <div class="gl-card" onClick="{{guru.select}}" style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:20px; cursor:pointer; display:flex; flex-direction:column; gap:14px; transition:background .12s, border-color .12s;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div class="gl-mono" style="width:38px; height:38px; border-radius:50%; background:var(--bg2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:12px; color:var(--accent); flex-shrink:0;">{{guru.initials}}</div>
+                <div style="flex:1; min-width:0;">
+                  <div style="font-weight:600; font-size:15px;">{{guru.name}}</div>
+                  <div style="font-size:11.5px; color:var(--text-faint); margin-top:1px;">{{guru.lastActive}} &middot; {{guru.sourceLabel}}</div>
+                </div>
+                <button onClick="{{guru.toggleFollow}}" title="{{guru.followLabel}}" style="{{guru.followBtnStyle}}">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="{{guru.starFill}}" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"></path></svg>
+                </button>
+              </div>
+
+              <div>
+                <div style="display:flex; align-items:baseline; gap:7px;">
+                  <div class="gl-mono" style="font-size:32px; font-weight:600; line-height:1; color:{{guru.scoreColor}};">{{guru.score}}</div>
+                  <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em;">reliability</div>
+                </div>
+                <div style="height:4px; border-radius:2px; background:var(--border); overflow:hidden; margin-top:9px;">
+                  <div style="height:100%; width:{{guru.scoreBarWidth}}; background:{{guru.scoreColor}};"></div>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <sc-for list="{{guru.categories}}" as="cat" hint-placeholder-count="2">
+                  <div class="gl-mono" style="font-size:10.5px; padding:4px 8px; border-radius:999px; background:var(--bg2); border:1px solid var(--border); color:var(--text-muted);">{{cat.label}} {{cat.pct}}%</div>
+                </sc-for>
+              </div>
+
+              <div style="font-size:12px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:12px;">{{guru.claimsSummary}}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ EXPERT PROFILE ============ -->
+    <sc-if value="{{screenProfile}}" hint-placeholder-val="{{false}}">
+      <div style="padding:36px 48px 64px; max-width:1020px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:22px;">
+          <button onClick="{{backToList}}" style="display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--text-muted); font-size:13px; padding:0;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+            {{backToListLabel}}
+          </button>
+          <button onClick="{{profile.addContent}}" style="display:flex; align-items:center; gap:8px; background:none; border:1px solid var(--border); color:var(--text); border-radius:7px; padding:9px 14px; font-size:12.5px; font-weight:600;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+            Add a video or post
+          </button>
+        </div>
+
+        <div style="display:flex; gap:28px; align-items:flex-start; margin-bottom:30px; padding-bottom:26px; border-bottom:1px solid var(--border);">
+          <div class="gl-mono" style="width:60px; height:60px; border-radius:50%; background:var(--bg2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:19px; color:var(--accent); flex-shrink:0;">{{profile.initials}}</div>
+
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:22px; font-weight:600;">{{profile.name}}</div>
+            <div style="font-size:12.5px; color:var(--text-faint); margin:3px 0 16px;">{{profile.lastActive}} &middot; {{profile.sourceLabel}} &middot; {{profile.claimsSummary}}</div>
+
+            <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Categories &middot; auto-derived from claim history</div>
+            <div style="display:flex; flex-direction:column; gap:7px; max-width:420px;">
+              <sc-for list="{{profile.categories}}" as="cat" hint-placeholder-count="3">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div style="width:78px; flex-shrink:0; font-size:12px; color:var(--text-muted);">{{cat.label}}</div>
+                  <div style="flex:1; height:6px; border-radius:3px; background:var(--border); overflow:hidden;">
+                    <div style="height:100%; width:{{cat.barWidth}}; background:var(--accent);"></div>
+                  </div>
+                  <div class="gl-mono" style="width:32px; text-align:right; font-size:12px; color:var(--text-muted);">{{cat.pct}}%</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="text-align:right; flex-shrink:0; width:150px;">
+            <div class="gl-mono" style="font-size:38px; font-weight:600; line-height:1; color:{{profile.scoreColor}};">{{profile.score}}</div>
+            <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;">reliability</div>
+            <div style="margin-top:18px;">
+              <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">90-day trend</div>
+              <svg viewBox="0 0 120 34" width="120" height="34" style="overflow:visible;">
+                <polyline points="{{profile.sparkPoints}}" fill="none" stroke="{{profile.sparkColor}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
+              </svg>
+              <div class="gl-mono" style="font-size:12px; color:{{profile.sparkColor}}; margin-top:2px;">{{profile.sparkDelta}}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:6px; margin-bottom:16px;">
+          <button onClick="{{filterAll}}" style="{{tabAllStyle}}">All claims</button>
+          <button onClick="{{filterOpen}}" style="{{tabOpenStyle}}">Open</button>
+          <button onClick="{{filterResolved}}" style="{{tabResolvedStyle}}">Resolved</button>
+        </div>
+
+        <div style="display:flex; flex-direction:column;">
+          <sc-for list="{{profile.claims}}" as="claim" hint-placeholder-count="4">
+            <div class="gl-claimrow" onClick="{{claim.select}}" style="display:flex; align-items:center; gap:16px; padding:14px 16px; border:1px solid var(--border); border-radius:8px; background:var(--card); cursor:pointer; margin-bottom:8px; transition:background .12s;">
+              <div style="width:140px; flex-shrink:0;">
+                <div style="font-weight:600; font-size:13.5px;">{{claim.asset}}</div>
+                <div class="gl-mono" style="font-size:11px; color:var(--text-faint);">{{claim.ticker}}</div>
+              </div>
+              <div style="width:148px; flex-shrink:0;">
+                <div style="font-size:11.5px; color:var(--text-muted); font-style:italic; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">&ldquo;{{claim.sourceTitle}}&rdquo;</div>
+                <div class="gl-mono" style="font-size:10.5px; color:var(--text-faint); margin-top:2px;">{{claim.sourceTypeLabel}} &middot; {{claim.claimDate}}</div>
+              </div>
+              <div style="flex:1; min-width:0; font-size:13px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{claim.outcome}}</div>
+              <div style="flex-shrink:0;">
+                <span class="gl-mono" style="font-size:10.5px; padding:4px 8px; border-radius:999px; letter-spacing:0.03em; background:{{claim.horizonBg}}; color:{{claim.horizonColor}};">{{claim.horizonLabel}}</span>
+              </div>
+              <div style="flex-shrink:0; width:104px; text-align:right;">
+                <span class="gl-mono" style="font-size:11px; font-weight:600; letter-spacing:0.03em; color:{{claim.statusColor}};">{{claim.statusLabel}}</span>
+              </div>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--text-faint)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 18l6-6-6-6"></path></svg>
+            </div>
+          </sc-for>
+          <sc-if value="{{profile.emptyFilter}}" hint-placeholder-val="{{false}}">
+            <div style="padding:32px; text-align:center; color:var(--text-faint); font-size:13px; border:1px dashed var(--border); border-radius:8px;">No claims in this filter.</div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ CLAIM DETAIL ============ -->
+    <sc-if value="{{screenClaim}}" hint-placeholder-val="{{false}}">
+      <div style="padding:36px 48px 64px; max-width:960px;">
+        <button onClick="{{backFromClaim}}" style="display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--text-muted); font-size:13px; padding:0; margin-bottom:22px;">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+          {{claimDetail.guruName}}
+        </button>
+
+        <div style="margin-bottom:26px;">
+          <div style="font-size:23px; font-weight:600;">{{claimDetail.asset}}</div>
+          <div class="gl-mono" style="font-size:13px; color:var(--text-faint); margin-top:2px;">{{claimDetail.ticker}}</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:20px; align-items:start;">
+
+          <!-- The claim -->
+          <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:24px;">
+            <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:18px;">The claim</div>
+
+            <div style="display:flex; flex-direction:column; gap:18px;">
+              <div>
+                <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px;">Condition</div>
+                <div style="font-size:14px;">{{claimDetail.condition}}</div>
+                <div class="gl-mono" style="font-size:10.5px; color:var(--text-faint); margin-top:4px;">{{claimDetail.conditionType}}</div>
+              </div>
+              <div>
+                <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px;">Expected outcome</div>
+                <div style="font-size:14px;">{{claimDetail.outcome}}</div>
+              </div>
+              <div>
+                <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px;">Horizon</div>
+                <span class="gl-mono" style="font-size:11px; padding:4px 9px; border-radius:999px; background:{{claimDetail.horizonBg}}; color:{{claimDetail.horizonColor}};">{{claimDetail.horizonLabel}}</span>
+              </div>
+              <div>
+                <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px;">Stated timeframe</div>
+                <div style="font-size:14px; font-style:italic; color:var(--text-muted);">{{claimDetail.timeframeText}}</div>
+              </div>
+              <div>
+                <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px;">Target window</div>
+                <div class="gl-mono" style="font-size:14px;">{{claimDetail.windowText}}</div>
+              </div>
+              <div style="border-top:1px solid var(--border); padding-top:16px; display:flex; justify-content:space-between; gap:16px;">
+                <div>
+                  <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px;">Source</div>
+                  <a href="{{claimDetail.sourceUrl}}" target="_blank" rel="noopener noreferrer" style="font-size:13px;">{{claimDetail.sourceDisplay}}</a>
+                </div>
+                <div style="text-align:right; flex-shrink:0;">
+                  <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px;">Claimed on</div>
+                  <div class="gl-mono" style="font-size:13px; color:var(--text-muted);">{{claimDetail.claimDate}}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- The evaluation -->
+          <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:24px; border-top:2px solid {{claimDetail.statusColor}};">
+            <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:18px;">Evaluation</div>
+
+            <span class="gl-mono" style="display:inline-block; font-size:12px; font-weight:600; letter-spacing:0.03em; padding:6px 12px; border-radius:999px; background:{{claimDetail.statusBg}}; color:{{claimDetail.statusColor}}; margin-bottom:18px;">{{claimDetail.statusLabel}}</span>
+
+            <sc-if value="{{claimDetail.showRationale}}" hint-placeholder-val="{{false}}">
+              <div class="gl-mono" style="font-size:11.5px; color:var(--text-faint); margin-bottom:16px;">Evaluated {{claimDetail.evaluatedDate}}</div>
+              <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">Rationale</div>
+              <div style="font-size:13.5px; color:var(--text); line-height:1.6;">{{claimDetail.rationale}}</div>
+            </sc-if>
+            <sc-if value="{{claimDetail.showOpenNote}}" hint-placeholder-val="{{false}}">
+              <div style="font-size:13px; color:var(--text-muted); line-height:1.55;">{{claimDetail.openNote}}</div>
+            </sc-if>
+
+            <sc-if value="{{claimDetail.showBenchmark}}" hint-placeholder-val="{{false}}">
+              <div style="margin-top:22px; padding-top:18px; border-top:1px solid var(--border);">
+                <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:12px;">Benchmark comparison</div>
+                <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px;">
+                  <span style="font-size:13px; color:var(--text-muted);">This trade</span>
+                  <span class="gl-mono" style="font-size:16px; font-weight:600; color:{{claimDetail.tradeReturnColor}};">{{claimDetail.tradeReturnLabel}}</span>
+                </div>
+                <sc-for list="{{claimDetail.benchmarkRows}}" as="bench" hint-placeholder-count="2">
+                  <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-top:1px solid var(--border);">
+                    <span style="font-size:12.5px; color:var(--text-muted);">{{bench.label}} <span class="gl-mono" style="color:var(--text-faint);">{{bench.ticker}}</span></span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <span class="gl-mono" style="font-size:12.5px; color:var(--text-muted);">{{bench.display}}</span>
+                      <span class="gl-mono" style="font-size:10px; font-weight:600; letter-spacing:0.03em; padding:2px 7px; border-radius:999px; color:{{bench.beatColor}};">{{bench.beatLabel}}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ ADD LINK / ADD CONTENT FLOW ============ -->
+    <sc-if value="{{screenAdd}}" hint-placeholder-val="{{false}}">
+      <div style="padding:40px 48px 64px; max-width:640px;">
+        <div class="gl-mono" style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">{{flowLabel}} &middot; Step {{addStepNum}} of {{addTotalSteps}}</div>
+        <div style="display:flex; gap:5px; margin-bottom:32px;">
+          <div style="height:3px; flex:1; border-radius:2px; background:{{addDot1}};"></div>
+          <div style="height:3px; flex:1; border-radius:2px; background:{{addDot2}};"></div>
+          <div style="height:3px; flex:1; border-radius:2px; background:{{addDot3}};"></div>
+          <div style="height:3px; flex:1; border-radius:2px; background:{{addDot4}};"></div>
+          <sc-if value="{{addModeAuto}}" hint-placeholder-val="{{false}}">
+            <div style="height:3px; flex:1; border-radius:2px; background:{{addDot5}};"></div>
+          </sc-if>
+        </div>
+
+        <!-- Auto mode, step 1: paste a link -->
+        <sc-if value="{{addPhaseLink}}" hint-placeholder-val="{{false}}">
+          <div style="font-size:20px; font-weight:600; margin-bottom:8px;">Add a link</div>
+          <div style="font-size:13px; color:var(--text-muted); margin-bottom:24px; line-height:1.5;">Paste a YouTube video or blog post link — we'll check whether it's from an expert you already track.</div>
+
+          <label style="font-size:12px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em;">Video or blog link</label>
+          <input type="text" value="{{addUrl}}" onChange="{{handleUrlChange}}" placeholder="https://youtube.com/watch?v=... or https://example.com/post" style="width:100%; margin:8px 0 24px; padding:11px 13px; border-radius:7px; border:1px solid var(--border); background:var(--bg2); color:var(--text); font-size:13.5px;" />
+
+          <div style="display:flex; gap:10px;">
+            <button onClick="{{backFromLink}}" style="padding:11px 18px; border-radius:7px; border:1px solid var(--border); background:none; color:var(--text-muted); font-size:13px;">Back</button>
+            <button onClick="{{runDetection}}" disabled="{{linkContinueDisabled}}" style="{{linkContinueStyle}}">Continue</button>
+          </div>
+        </sc-if>
+
+        <!-- Auto mode, step 2: detection result -->
+        <sc-if value="{{addPhaseDetect}}" hint-placeholder-val="{{false}}">
+          <div style="font-size:20px; font-weight:600; margin-bottom:8px;">{{detectTitle}}</div>
+          <div class="gl-mono" style="font-size:11px; color:var(--text-faint); margin-bottom:20px;">Detected: {{detectSourceTypeLabel}} source</div>
+
+          <sc-if value="{{addTargetExisting}}" hint-placeholder-val="{{false}}">
+            <div style="display:flex; align-items:center; gap:14px; padding:16px; border:1px solid var(--accent); border-radius:10px; background:var(--accent-soft); margin-bottom:16px;">
+              <div class="gl-mono" style="width:40px; height:40px; border-radius:50%; background:var(--bg2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px; color:var(--accent); flex-shrink:0;">{{detectedExpert.initials}}</div>
+              <div>
+                <div style="font-weight:600; font-size:14.5px;">{{detectedExpert.name}}</div>
+                <div style="font-size:12.5px; color:var(--text-muted); margin-top:2px;">Recognized — we'll add this to their existing claim history</div>
+              </div>
+            </div>
+            <button onClick="{{useDifferentExpert}}" style="background:none; border:none; color:var(--text-muted); font-size:12.5px; padding:0; margin-bottom:24px; text-decoration:underline; text-align:left;">Not them? Register as a new expert instead</button>
+          </sc-if>
+          <sc-if value="{{addTargetNew}}" hint-placeholder-val="{{true}}">
+            <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">We don't recognize this source yet.</div>
+            <label style="font-size:12px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em;">Expert name</label>
+            <input type="text" value="{{addName}}" onChange="{{handleNameChange}}" placeholder="e.g. MacroChartist" style="width:100%; margin:8px 0 24px; padding:11px 13px; border-radius:7px; border:1px solid var(--border); background:var(--bg2); color:var(--text); font-size:13.5px;" />
+          </sc-if>
+
+          <div style="display:flex; gap:10px;">
+            <button onClick="{{backToLink}}" style="padding:11px 18px; border-radius:7px; border:1px solid var(--border); background:none; color:var(--text-muted); font-size:13px;">Back</button>
+            <button onClick="{{continueFromDetect}}" disabled="{{detectContinueDisabled}}" style="{{detectContinueStyle}}">Continue</button>
+          </div>
+        </sc-if>
+
+        <!-- Direct mode, step 1: details (source type + url; expert already known) -->
+        <sc-if value="{{addPhaseDetails}}" hint-placeholder-val="{{true}}">
+          <div style="font-size:20px; font-weight:600; margin-bottom:20px;">{{detailsTitle}}</div>
+
+          <label style="font-size:12px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em; display:block; margin-bottom:8px;">Source type</label>
+          <div style="display:flex; gap:8px; margin-bottom:18px;">
+            <button onClick="{{setSourceVideo}}" style="{{sourceVideoStyle}}">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"></rect><path d="M16 10l6-3v10l-6-3"></path></svg>
+              Video
+            </button>
+            <button onClick="{{setSourceBlog}}" style="{{sourceBlogStyle}}">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"></path><path d="M9 9h6M9 13h6M9 17h4"></path></svg>
+              Blog
+            </button>
+          </div>
+
+          <label style="font-size:12px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em;">{{urlLabel}}</label>
+          <input type="text" value="{{addUrl}}" onChange="{{handleUrlChange}}" placeholder="{{urlPlaceholder}}" style="width:100%; margin:8px 0 24px; padding:11px 13px; border-radius:7px; border:1px solid var(--border); background:var(--bg2); color:var(--text); font-size:13.5px;" />
+
+          <div style="display:flex; gap:10px;">
+            <button onClick="{{backFromDetails}}" style="padding:11px 18px; border-radius:7px; border:1px solid var(--border); background:none; color:var(--text-muted); font-size:13px;">Back</button>
+            <button onClick="{{continueToProcessing}}" disabled="{{detailsContinueDisabled}}" style="{{detailsContinueStyle}}">Continue</button>
+          </div>
+        </sc-if>
+
+        <!-- Processing -->
+        <sc-if value="{{addPhaseProcessing}}" hint-placeholder-val="{{false}}">
+          <div style="font-size:20px; font-weight:600; margin-bottom:20px;">Running claim finder</div>
+          <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:26px;">
+            <sc-if value="{{showProcessingIntro}}" hint-placeholder-val="{{false}}">
+              <div style="display:flex; align-items:center; gap:12px; padding:14px 16px; border:1px solid var(--border); border-radius:8px; background:var(--card);">
+                <div style="width:20px; height:20px; border-radius:50%; background:var(--good-soft); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--good)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <div style="font-size:13.5px;">{{processingIntro}}</div>
+              </div>
+            </sc-if>
+            <div style="display:flex; align-items:center; gap:12px; padding:14px 16px; border:1px solid var(--border); border-radius:8px; background:var(--card);">
+              <div style="width:20px; height:20px; border-radius:50%; background:var(--good-soft); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--good)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg>
+              </div>
+              <div style="font-size:13.5px;">Fetched source content</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; padding:14px 16px; border:1px solid var(--border); border-radius:8px; background:var(--card);">
+              <div style="width:20px; height:20px; border-radius:50%; background:var(--good-soft); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--good)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg>
+              </div>
+              <div style="font-size:13.5px;">Extracted claims &mdash; no categorization, no collapsing</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; padding:14px 16px; border:1px solid var(--border); border-radius:8px; background:var(--card);">
+              <div style="width:20px; height:20px; border-radius:50%; background:var(--good-soft); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--good)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg>
+              </div>
+              <div style="font-size:13.5px;">Ready for review</div>
+            </div>
+          </div>
+          <button onClick="{{continueToReview}}" style="display:flex; align-items:center; gap:8px; background:var(--accent); color:#1a1305; border:none; border-radius:7px; padding:11px 18px; font-size:13px; font-weight:600;">
+            Review claims
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+          </button>
+        </sc-if>
+
+        <!-- Review -->
+        <sc-if value="{{addPhaseReview}}" hint-placeholder-val="{{false}}">
+          <div style="font-size:20px; font-weight:600; margin-bottom:6px;">Review extracted claims</div>
+          <div style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Uncheck anything you don't want kept in the ledger.</div>
+          <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:24px;">
+            <sc-for list="{{draftClaims}}" as="draft" hint-placeholder-count="3">
+              <div onClick="{{draft.toggle}}" style="display:flex; align-items:flex-start; gap:14px; padding:16px; border:1px solid var(--border); border-radius:8px; background:var(--card); cursor:pointer;">
+                <div style="{{draft.checkStyle}}">
+                  <sc-if value="{{draft.checked}}" hint-placeholder-val="{{true}}">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#151a1f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg>
+                  </sc-if>
+                </div>
+                <div style="flex:1; min-width:0;">
+                  <div style="display:flex; align-items:baseline; gap:8px;">
+                    <div style="font-weight:600; font-size:14px;">{{draft.asset}}</div>
+                    <span class="gl-mono" style="font-size:10.5px; padding:3px 8px; border-radius:999px; background:{{draft.horizonBg}}; color:{{draft.horizonColor}};">{{draft.horizonLabel}}</span>
+                  </div>
+                  <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">{{draft.outcome}}</div>
+                  <div style="font-size:11.5px; color:var(--text-faint); margin-top:6px; font-style:italic;">{{draft.condition}}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button onClick="{{backFromReview}}" style="padding:11px 18px; border-radius:7px; border:1px solid var(--border); background:none; color:var(--text-muted); font-size:13px;">Back</button>
+            <button onClick="{{confirmSave}}" style="background:var(--accent); color:#1a1305; border:none; border-radius:7px; padding:11px 18px; font-size:13px; font-weight:600;">{{confirmLabel}}</button>
+          </div>
+        </sc-if>
+
+        <!-- Done -->
+        <sc-if value="{{addPhaseDone}}" hint-placeholder-val="{{false}}">
+          <div style="padding:36px 8px; text-align:center;">
+            <div style="width:44px; height:44px; border-radius:50%; background:var(--good-soft); display:flex; align-items:center; justify-content:center; margin:0 auto 18px;">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--good)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <div style="font-size:19px; font-weight:600; margin-bottom:8px;">{{addSavedCount}} claims added</div>
+            <div style="font-size:13.5px; color:var(--text-muted); margin-bottom:26px;">Claim analyzer will start checking these against their target windows automatically.</div>
+            <div style="display:flex; gap:10px; justify-content:center;">
+              <button onClick="{{doneBackHandler}}" style="padding:11px 18px; border-radius:7px; border:1px solid var(--border); background:none; color:var(--text); font-size:13px;">{{doneBackLabel}}</button>
+              <button onClick="{{doneAgainHandler}}" style="background:var(--accent); color:#1a1305; border:none; border-radius:7px; padding:11px 18px; font-size:13px; font-weight:600;">{{doneAgainLabel}}</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      screen: 'watchlist',
+      listScreen: 'watchlist',
+      selectedGuruId: 'macro-chartist',
+      selectedClaimId: 'c1',
+      claimFilter: 'all',
+      searchQuery: '',
+      followed: {
+        'macro-chartist': true,
+        'crypto-compass': true,
+        'value-vane': false,
+        'oilpatch-ollie': false,
+        'swing-sensei': true,
+      },
+      addMode: 'direct',
+      addPhase: 'details',
+      addTarget: null,
+      addGuruId: null,
+      addDetectedGuruId: null,
+      addName: '',
+      addSourceType: 'video',
+      addUrl: '',
+      addSelected: {},
+      addSavedCount: 0,
+    };
+  }
+
+  getGurus() {
+    return [
+      { id: 'macro-chartist', name: 'MacroChartist', initials: 'MC', score: 78, claims: 41, resolved: 29, open: 12, lastActive: '2 days ago', recency: 2, primarySource: 'video', categories: [{ label: 'Macro', pct: 82 }, { label: 'Rates', pct: 74 }, { label: 'Equities', pct: 61 }] },
+      { id: 'crypto-compass', name: 'CryptoCompass', initials: 'CC', score: 61, claims: 67, resolved: 50, open: 17, lastActive: 'today', recency: 0, primarySource: 'video', categories: [{ label: 'Crypto', pct: 58 }, { label: 'Altcoins', pct: 65 }] },
+      { id: 'value-vane', name: 'ValueVane', initials: 'VV', score: 85, claims: 22, resolved: 20, open: 2, lastActive: '5 days ago', recency: 5, primarySource: 'blog', categories: [{ label: 'Equities', pct: 88 }, { label: 'Value', pct: 83 }] },
+      { id: 'oilpatch-ollie', name: 'OilPatch Ollie', initials: 'OO', score: 44, claims: 18, resolved: 15, open: 3, lastActive: '9 days ago', recency: 9, primarySource: 'video', categories: [{ label: 'Commodities', pct: 41 }, { label: 'Oil', pct: 47 }] },
+      { id: 'swing-sensei', name: 'SwingSensei', initials: 'SS', score: 69, claims: 35, resolved: 24, open: 11, lastActive: '1 day ago', recency: 1, primarySource: 'blog', categories: [{ label: 'Equities', pct: 71 }, { label: 'Macro', pct: 63 }] },
+    ];
+  }
+
+  getClaims() {
+    return [
+      { id: 'c1', guruId: 'macro-chartist', asset: 'S&P 500', ticker: 'SPY', condition: 'None &mdash; unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Grinds higher into year-end, new highs', horizon: 'swing', timeframeText: '"next few months"', windowText: 'Oct 15 – Dec 20, 2026', status: 'open', verdict: null, rationale: null, sourceTitle: 'Where Markets Go From Here', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=wmg-demo1', claimDate: 'Sep 1, 2026', guruName: 'MacroChartist' },
+      { id: 'c2', guruId: 'macro-chartist', asset: '10-Year Treasury Yield', ticker: '^TNX', condition: 'If the Fed cuts rates at the September meeting', conditionType: 'EVENT TRIGGER', outcome: 'Yields fall below 3.8%', horizon: 'short', timeframeText: '"within 6 weeks of the cut"', windowText: 'Sep 18 – Oct 30, 2026', status: 'resolved', verdict: 'good', rationale: 'Fed cut on Sep 17; the 10-year yield fell to 3.71% by Oct 22 — condition triggered and the outcome was met within the window.', evaluatedDate: 'Oct 31, 2026', sourceTitle: 'Fed Week Playbook', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=fedweek-demo', claimDate: 'Sep 10, 2026', guruName: 'MacroChartist' },
+      { id: 'c3', guruId: 'macro-chartist', asset: 'Crude Oil', ticker: 'CL=F', condition: 'If Iran reaches a ceasefire', conditionType: 'EVENT TRIGGER', outcome: 'Oil drops toward $60/barrel', horizon: 'short', timeframeText: '"within a month of any ceasefire"', windowText: 'Event-based — no fixed calendar dates', status: 'resolved', verdict: 'bad', rationale: 'Ceasefire held from Aug 3; oil fell only to $71 by Sep 3, well above the $60 target within the stated window.', evaluatedDate: 'Sep 4, 2026', tradeReturnValue: -8.7, tradeReturnLabel: '−8.7%', benchmarks: [{ label: 'S&P 500', ticker: 'SPY', value: 2.1, display: '+2.1%' }, { label: 'Nasdaq', ticker: 'QQQ', value: 3.4, display: '+3.4%' }], sourceTitle: 'Geopolitics & Crude', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=geocrude-demo', claimDate: 'Jul 28, 2026', guruName: 'MacroChartist' },
+      { id: 'c4', guruId: 'macro-chartist', asset: 'Regional Banks', ticker: 'KRE', condition: 'None &mdash; unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Further weakness — avoid the group', horizon: 'swing', timeframeText: '"next 2-3 months"', windowText: 'Sep 1 – Nov 30, 2026', status: 'open', verdict: null, rationale: null, sourceTitle: 'Where Markets Go From Here', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=wmg-demo1', claimDate: 'Sep 1, 2026', guruName: 'MacroChartist' },
+      { id: 'c5', guruId: 'macro-chartist', asset: 'Gold', ticker: 'GC=F', condition: 'None &mdash; unconditional', conditionType: 'UNCONDITIONAL', outcome: 'New highs above $2,900', horizon: 'long', timeframeText: '"long-term bullish" — no fixed date given', windowText: 'Open-ended — rechecked periodically', status: 'open', verdict: null, rationale: null, sourceTitle: 'Gold’s Decade', sourceType: 'blog', sourceUrl: 'https://exampleblog.com/golds-decade', claimDate: 'Aug 12, 2026', guruName: 'MacroChartist' },
+      { id: 'c6', guruId: 'crypto-compass', asset: 'Bitcoin', ticker: 'BTC-USD', condition: 'None &mdash; unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Rallies to new highs above $130k', horizon: 'swing', timeframeText: '"next 3-4 months"', windowText: 'Sep 1 – Dec 31, 2026', status: 'open', verdict: null, rationale: null, sourceTitle: 'Cycle Top Watch', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=cycletop-demo', claimDate: 'Aug 30, 2026', guruName: 'CryptoCompass' },
+      { id: 'c7', guruId: 'crypto-compass', asset: 'Ethereum', ticker: 'ETH-USD', condition: 'If BTC breaks above $130k first', conditionType: 'PRICE TRIGGER', outcome: 'Follows to $6,500', horizon: 'short', timeframeText: '"within 6 weeks of that breakout"', windowText: 'Trigger not yet met', status: 'open', verdict: null, rationale: null, sourceTitle: 'Cycle Top Watch', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=cycletop-demo', claimDate: 'Aug 30, 2026', guruName: 'CryptoCompass' },
+      { id: 'c8', guruId: 'value-vane', asset: 'Small-cap value (IWN)', ticker: 'IWN', condition: 'None &mdash; unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Outperforms growth over the next year', horizon: 'long', timeframeText: '"over the next year"', windowText: 'Jan 1 – Dec 31, 2026', status: 'resolved', verdict: 'good', rationale: 'IWN +14.2% vs. IWO +8.9% over the stated window — value outperformed growth as called.', evaluatedDate: 'Jan 3, 2027', tradeReturnValue: 14.2, tradeReturnLabel: '+14.2%', benchmarks: [{ label: 'S&P 500', ticker: 'SPY', value: 9.6, display: '+9.6%' }, { label: 'Nasdaq', ticker: 'QQQ', value: 11.8, display: '+11.8%' }], sourceTitle: 'The Case for Boring Stocks', sourceType: 'blog', sourceUrl: 'https://exampleblog.com/case-for-boring-stocks', claimDate: 'Jan 6, 2026', guruName: 'ValueVane' },
+      { id: 'c9', guruId: 'value-vane', asset: 'Regional homebuilders', ticker: 'XHB', condition: 'None &mdash; unconditional', conditionType: 'UNCONDITIONAL', outcome: '20% upside as rates ease', horizon: 'swing', timeframeText: '"next 4-5 months"', windowText: 'Aug 20 – Jan 20, 2027', status: 'open', verdict: null, rationale: null, sourceTitle: 'Rate Cuts and Housing', sourceType: 'blog', sourceUrl: 'https://exampleblog.com/rate-cuts-and-housing', claimDate: 'Aug 20, 2026', guruName: 'ValueVane' },
+      { id: 'c10', guruId: 'oilpatch-ollie', asset: 'Crude Oil', ticker: 'CL=F', condition: 'None &mdash; unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Breaks $100 on supply crunch', horizon: 'swing', timeframeText: '"by year-end"', windowText: 'Jun 1 – Dec 31, 2026', status: 'resolved', verdict: 'bad', rationale: 'Oil peaked at $84 in the window and never approached $100 — the supply crunch thesis did not play out.', evaluatedDate: 'Jan 1, 2027', tradeReturnValue: 7.7, tradeReturnLabel: '+7.7%', benchmarks: [{ label: 'S&P 500', ticker: 'SPY', value: 11.2, display: '+11.2%' }, { label: 'Nasdaq', ticker: 'QQQ', value: 13.5, display: '+13.5%' }], sourceTitle: 'Why $100 Oil Is Coming', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=oil100-demo', claimDate: 'Jun 1, 2026', guruName: 'OilPatch Ollie' },
+      { id: 'c11', guruId: 'oilpatch-ollie', asset: 'Natural Gas', ticker: 'NG=F', condition: 'If winter demand spikes', conditionType: 'EVENT TRIGGER', outcome: 'Prices double', horizon: 'short', timeframeText: '"within the cold snap"', windowText: 'Trigger not yet met', status: 'open', verdict: null, rationale: null, sourceTitle: 'Winter Setup', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=wintersetup-demo', claimDate: 'Aug 25, 2026', guruName: 'OilPatch Ollie' },
+      { id: 'c12', guruId: 'swing-sensei', asset: 'Semiconductors', ticker: 'SMH', condition: 'None &mdash; unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Next leg up on AI capex', horizon: 'swing', timeframeText: '"next couple months"', windowText: 'Jul 1 – Sep 15, 2026', status: 'resolved', verdict: 'good', rationale: 'SMH rose from $238 to $271 (+13.9%) over the window — the call paid off.', evaluatedDate: 'Sep 16, 2026', tradeReturnValue: 13.9, tradeReturnLabel: '+13.9%', benchmarks: [{ label: 'S&P 500', ticker: 'SPY', value: 4.8, display: '+4.8%' }, { label: 'Nasdaq', ticker: 'QQQ', value: 6.1, display: '+6.1%' }], sourceTitle: 'AI Capex Isn’t Slowing', sourceType: 'blog', sourceUrl: 'https://exampleblog.com/ai-capex-isnt-slowing', claimDate: 'Jul 1, 2026', guruName: 'SwingSensei' },
+      { id: 'c13', guruId: 'swing-sensei', asset: 'Regional Banks', ticker: 'KRE', condition: 'If credit conditions worsen', conditionType: 'EVENT TRIGGER', outcome: 'Another leg down', horizon: 'short', timeframeText: '"in the following weeks"', windowText: 'Trigger not yet met', status: 'open', verdict: null, rationale: null, sourceTitle: 'Credit Cracks', sourceType: 'blog', sourceUrl: 'https://exampleblog.com/credit-cracks', claimDate: 'Aug 18, 2026', guruName: 'SwingSensei' },
+    ];
+  }
+
+  getDraftClaims() {
+    return [
+      { id: 'd1', asset: 'Nvidia', condition: 'None — unconditional. "next 6-8 weeks", targeting Sep 20 – Nov 8, 2026', outcome: 'Continues higher into earnings', horizon: 'swing' },
+      { id: 'd2', asset: 'US Dollar Index', condition: 'If the Fed signals a pause. Event-triggered, no fixed window', outcome: 'Weakens further, below 100', horizon: 'short' },
+      { id: 'd3', asset: 'Homebuilders', condition: 'None — unconditional. "long-term", no fixed date given', outcome: 'Bullish as rate cuts continue', horizon: 'long' },
+    ];
+  }
+
+  activeChip(active) {
+    return active
+      ? 'padding:8px 14px; border-radius:7px; border:1px solid var(--accent); background:var(--accent-soft); color:var(--accent); font-size:12.5px; font-weight:600;'
+      : 'padding:8px 14px; border-radius:7px; border:1px solid var(--border); background:none; color:var(--text-muted); font-size:12.5px;';
+  }
+
+  navItemStyle(active) {
+    return active
+      ? 'display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:7px; background:var(--card); border:none; color:var(--text); font-size:13.5px; text-align:left;'
+      : 'display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:7px; background:none; border:none; color:var(--text-muted); font-size:13.5px; text-align:left;';
+  }
+
+  horizonStyle(h) {
+    if (h === 'short') return { label: 'SHORT-TERM', bg: 'var(--pending-soft)', color: 'var(--text-faint)' };
+    if (h === 'long') return { label: 'LONG-TERM', bg: 'var(--accent-soft)', color: 'var(--accent)' };
+    return { label: 'SWING', bg: 'var(--accent-soft)', color: 'var(--accent)' };
+  }
+
+  statusStyle(claim) {
+    if (claim.status === 'open') return { label: 'OPEN', color: 'var(--pending)', bg: 'var(--pending-soft)' };
+    if (claim.verdict === 'good') return { label: 'GOOD CALL', color: 'var(--good)', bg: 'var(--good-soft)' };
+    return { label: 'BAD CALL', color: 'var(--bad)', bg: 'var(--bad-soft)' };
+  }
+
+  scoreColor(score) {
+    if (score >= 70) return 'var(--good)';
+    if (score >= 50) return 'var(--accent)';
+    return 'var(--bad)';
+  }
+
+  goWatchlist() { this.setState({ screen: 'watchlist', listScreen: 'watchlist' }); }
+
+  goBrowse() { this.setState({ screen: 'browse', listScreen: 'browse' }); }
+
+  goAddLink() {
+    this.setState({
+      screen: 'add', addMode: 'auto', addPhase: 'link', addTarget: null, addGuruId: null,
+      addDetectedGuruId: null, addName: '', addSourceType: 'video', addUrl: '', addSelected: {},
+    });
+  }
+
+  goAddToGuru(guruId) {
+    this.setState({
+      screen: 'add', addMode: 'direct', addPhase: 'details', addTarget: 'existing', addGuruId: guruId,
+      addName: '', addSourceType: 'video', addUrl: '', addSelected: {},
+    });
+  }
+
+  toggleFollow(id) {
+    const next = { ...this.state.followed };
+    next[id] = !next[id];
+    this.setState({ followed: next });
+  }
+
+  detectSourceType(url) {
+    const u = url.toLowerCase();
+    return (u.indexOf('youtube.com') !== -1 || u.indexOf('youtu.be') !== -1) ? 'video' : 'blog';
+  }
+
+  detectExpert(url, experts) {
+    const u = url.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return experts.find((g) => {
+      const slug = g.id.replace(/-/g, '');
+      const nameSlug = g.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      return u.indexOf(slug) !== -1 || u.indexOf(nameSlug) !== -1;
+    }) || null;
+  }
+
+  runDetection() {
+    const gurusRaw = this.getGurus();
+    const sourceType = this.detectSourceType(this.state.addUrl);
+    const match = this.detectExpert(this.state.addUrl, gurusRaw);
+    this.setState({
+      addPhase: 'detect',
+      addSourceType: sourceType,
+      addDetectedGuruId: match ? match.id : null,
+      addTarget: match ? 'existing' : 'new',
+      addGuruId: match ? match.id : null,
+    });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const gurusRaw = this.getGurus();
+    const claimsRaw = this.getClaims();
+    const draftRaw = this.getDraftClaims();
+
+    const sorted = gurusRaw.slice().sort((a, b) => b.score - a.score);
+    const query = s.searchQuery.trim().toLowerCase();
+
+    const totalClaims = gurusRaw.reduce((sum, g) => sum + g.claims, 0);
+
+    const gurus = sorted.map((g) => {
+      const followed = !!s.followed[g.id];
+      return {
+        ...g,
+        scoreColor: this.scoreColor(g.score),
+        scoreBarWidth: g.score + '%',
+        sourceLabel: g.primarySource === 'video' ? 'VIDEO' : 'BLOG',
+        claimsSummary: g.claims + ' claims · ' + g.resolved + ' resolved · ' + g.open + ' open',
+        select: () => this.setState({ screen: 'profile', selectedGuruId: g.id, claimFilter: 'all' }),
+        followed: followed,
+        followLabel: followed ? 'Following' : 'Follow',
+        starFill: followed ? 'currentColor' : 'none',
+        followBtnStyle: followed
+          ? 'display:flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid var(--accent); background:var(--accent-soft); color:var(--accent); font-size:11px; font-weight:600; flex-shrink:0;'
+          : 'display:flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); background:none; color:var(--text-faint); font-size:11px; font-weight:600; flex-shrink:0;',
+        toggleFollow: (e) => { e.stopPropagation(); this.toggleFollow(g.id); },
+      };
+    });
+
+    const matchesQuery = (g) => query === '' || g.name.toLowerCase().indexOf(query) !== -1;
+    const browseGurus = gurus.filter(matchesQuery);
+    const watchlistFollowed = gurus.filter((g) => g.followed);
+    const watchlistGurus = watchlistFollowed.filter(matchesQuery);
+
+    const selectedGuru = gurusRaw.find((g) => g.id === s.selectedGuruId) || gurusRaw[0];
+    let profileClaims = claimsRaw.filter((c) => c.guruId === selectedGuru.id);
+    if (s.claimFilter === 'open') profileClaims = profileClaims.filter((c) => c.status === 'open');
+    if (s.claimFilter === 'resolved') profileClaims = profileClaims.filter((c) => c.status === 'resolved');
+
+    const spark = { good: '#4fbf7a', mid: '#e3a63a', bad: '#e0616b' };
+    const sparkColor = selectedGuru.score >= 70 ? spark.good : selectedGuru.score >= 50 ? spark.mid : spark.bad;
+    const sparkPointsByGuru = {
+      'macro-chartist': '0,20 20,17 40,19 60,12 80,14 100,7 120,5',
+      'crypto-compass': '0,10 20,14 40,11 60,20 80,22 100,18 120,21',
+      'value-vane': '0,22 20,18 40,15 60,14 80,10 100,8 120,4',
+      'oilpatch-ollie': '0,8 20,12 40,16 60,15 80,22 100,25 120,27',
+      'swing-sensei': '0,18 20,15 40,18 60,13 80,15 100,9 120,11',
+    };
+
+    const profile = {
+      ...selectedGuru,
+      scoreColor: this.scoreColor(selectedGuru.score),
+      sourceLabel: selectedGuru.primarySource === 'video' ? 'Video-focused' : 'Blog-focused',
+      claimsSummary: selectedGuru.claims + ' claims · ' + selectedGuru.resolved + ' resolved · ' + selectedGuru.open + ' open',
+      categories: selectedGuru.categories.map((c) => ({ ...c, barWidth: c.pct + '%' })),
+      sparkPoints: sparkPointsByGuru[selectedGuru.id] || sparkPointsByGuru['macro-chartist'],
+      sparkColor: sparkColor,
+      sparkDelta: selectedGuru.score >= 70 ? '+4 vs. prior period' : selectedGuru.score >= 50 ? '−1 vs. prior period' : '−7 vs. prior period',
+      emptyFilter: profileClaims.length === 0,
+      addContent: () => this.goAddToGuru(selectedGuru.id),
+      claims: profileClaims.map((c) => {
+        const hz = this.horizonStyle(c.horizon);
+        const st = this.statusStyle(c);
+        return {
+          ...c, horizonLabel: hz.label, horizonBg: hz.bg, horizonColor: hz.color,
+          statusLabel: st.label, statusColor: st.color,
+          sourceTypeLabel: c.sourceType === 'video' ? 'VIDEO' : 'BLOG',
+          select: () => this.setState({ screen: 'claim', selectedClaimId: c.id }),
+        };
+      }),
+    };
+
+    const selectedClaim = claimsRaw.find((c) => c.id === s.selectedClaimId) || claimsRaw[0];
+    const hz = this.horizonStyle(selectedClaim.horizon);
+    const st = this.statusStyle(selectedClaim);
+    const hasBenchmarks = !!selectedClaim.benchmarks;
+    const claimDetail = {
+      ...selectedClaim,
+      horizonLabel: hz.label, horizonBg: hz.bg, horizonColor: hz.color,
+      statusLabel: st.label, statusColor: st.color, statusBg: st.bg,
+      sourceDisplay: '"' + selectedClaim.sourceTitle + '" — ' + (selectedClaim.sourceType === 'video' ? 'video' : 'blog post'),
+      showRationale: selectedClaim.status === 'resolved',
+      showOpenNote: selectedClaim.status === 'open',
+      openNote: selectedClaim.windowText.indexOf('Open-ended') === 0 || selectedClaim.windowText.indexOf('no fixed') !== -1 || selectedClaim.windowText.indexOf('Trigger not yet met') !== -1 || selectedClaim.windowText.indexOf('Event-based') === 0
+        ? 'No fixed target date — claim analyzer rechecks this periodically rather than resolving it once.'
+        : 'Target window has not arrived yet — claim analyzer will resolve this once it does.',
+      showBenchmark: hasBenchmarks,
+      tradeReturnColor: hasBenchmarks && selectedClaim.tradeReturnValue >= 0 ? 'var(--good)' : 'var(--bad)',
+      benchmarkRows: hasBenchmarks
+        ? selectedClaim.benchmarks.map((b) => {
+            const beat = selectedClaim.tradeReturnValue > b.value;
+            return {
+              ...b,
+              beatLabel: beat ? 'Beat' : 'Lagged',
+              beatColor: beat ? 'var(--good)' : 'var(--bad)',
+            };
+          })
+        : [],
+    };
+
+    const addTargetNew = s.addTarget === 'new';
+    const addTargetExisting = s.addTarget === 'existing';
+    const addGuruContext = gurusRaw.find((g) => g.id === s.addGuruId);
+    const detectedExpert = gurus.find((g) => g.id === s.addGuruId) || null;
+
+    const autoOrder = ['link', 'detect', 'processing', 'review', 'done'];
+    const directOrder = ['details', 'processing', 'review', 'done'];
+    const phaseOrder = s.addMode === 'auto' ? autoOrder : directOrder;
+    const phaseIndex = phaseOrder.indexOf(s.addPhase) + 1;
+    const totalSteps = phaseOrder.length;
+
+    const detailsContinueDisabled = !s.addUrl;
+    const detectContinueDisabled = addTargetNew && s.addName.trim().length === 0;
+    const enabledBtnStyle = 'background:var(--accent); color:#1a1305; border:none; border-radius:7px; padding:11px 18px; font-size:13px; font-weight:600;';
+    const disabledBtnStyle = enabledBtnStyle + ' opacity:0.4;';
+
+    const draftClaims = draftRaw.map((d) => {
+      const hzd = this.horizonStyle(d.horizon);
+      const checked = s.addSelected[d.id] !== false;
+      return {
+        ...d, horizonLabel: hzd.label, horizonBg: hzd.bg, horizonColor: hzd.color,
+        checked: checked,
+        checkStyle: checked
+          ? 'width:20px; height:20px; border-radius:5px; background:var(--accent); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px;'
+          : 'width:20px; height:20px; border-radius:5px; border:1.5px solid var(--border); flex-shrink:0; margin-top:2px;',
+        toggle: () => {
+          const next = { ...this.state.addSelected };
+          next[d.id] = !checked;
+          this.setState({ addSelected: next });
+        },
+      };
+    });
+    const selectedDraftCount = draftClaims.filter((d) => d.checked).length;
+
+    return {
+      statLine: gurusRaw.length + ' experts · ' + totalClaims + ' claims tracked',
+      screenWatchlist: s.screen === 'watchlist',
+      screenBrowse: s.screen === 'browse',
+      screenProfile: s.screen === 'profile',
+      screenClaim: s.screen === 'claim',
+      screenAdd: s.screen === 'add',
+      navWatchlistStyle: this.navItemStyle(s.screen === 'watchlist'),
+      navBrowseStyle: this.navItemStyle(s.screen === 'browse'),
+      navAddStyle: this.navItemStyle(s.screen === 'add'),
+      goWatchlist: () => this.goWatchlist(),
+      goBrowse: () => this.goBrowse(),
+      goAddLink: () => this.goAddLink(),
+
+      gurus: gurus,
+      browseGurus: browseGurus,
+      browseNoMatches: browseGurus.length === 0,
+      watchlistGurus: watchlistGurus,
+      watchlistEmpty: watchlistFollowed.length === 0,
+      watchlistNoMatches: watchlistFollowed.length > 0 && watchlistGurus.length === 0,
+      searchQuery: s.searchQuery,
+      handleSearchChange: (e) => this.setState({ searchQuery: e.target.value }),
+      backToList: () => this.setState({ screen: s.listScreen }),
+      backToListLabel: s.listScreen === 'browse' ? 'Browse all experts' : 'Watchlist',
+
+      profile: profile,
+      filterAll: () => this.setState({ claimFilter: 'all' }),
+      filterOpen: () => this.setState({ claimFilter: 'open' }),
+      filterResolved: () => this.setState({ claimFilter: 'resolved' }),
+      tabAllStyle: this.activeChip(s.claimFilter === 'all'),
+      tabOpenStyle: this.activeChip(s.claimFilter === 'open'),
+      tabResolvedStyle: this.activeChip(s.claimFilter === 'resolved'),
+
+      claimDetail: claimDetail,
+      backFromClaim: () => this.setState({ screen: 'profile', selectedGuruId: selectedClaim.guruId }),
+
+      addModeAuto: s.addMode === 'auto',
+      addStepNum: String(phaseIndex),
+      addTotalSteps: String(totalSteps),
+      addPhaseLink: s.addPhase === 'link',
+      addPhaseDetect: s.addPhase === 'detect',
+      addPhaseDetails: s.addPhase === 'details',
+      addPhaseProcessing: s.addPhase === 'processing',
+      addPhaseReview: s.addPhase === 'review',
+      addPhaseDone: s.addPhase === 'done',
+      addDot1: phaseIndex >= 1 ? 'var(--accent)' : 'var(--border)',
+      addDot2: phaseIndex >= 2 ? 'var(--accent)' : 'var(--border)',
+      addDot3: phaseIndex >= 3 ? 'var(--accent)' : 'var(--border)',
+      addDot4: phaseIndex >= 4 ? 'var(--accent)' : 'var(--border)',
+      addDot5: phaseIndex >= 5 ? 'var(--accent)' : 'var(--border)',
+      flowLabel: s.addMode === 'auto' ? 'Add a link' : 'Add a video or post',
+      addTargetNew: addTargetNew,
+      addTargetExisting: addTargetExisting,
+      addName: s.addName,
+      handleNameChange: (e) => this.setState({ addName: e.target.value }),
+      addUrl: s.addUrl,
+      handleUrlChange: (e) => this.setState({ addUrl: e.target.value }),
+
+      // Auto mode — step 1: paste a link
+      backFromLink: () => this.setState({ screen: s.listScreen }),
+      runDetection: () => this.runDetection(),
+      linkContinueDisabled: !s.addUrl,
+      linkContinueStyle: s.addUrl ? enabledBtnStyle : disabledBtnStyle,
+
+      // Auto mode — step 2: detection result
+      detectTitle: addTargetExisting ? 'We recognized this source' : 'New expert details',
+      detectSourceTypeLabel: s.addSourceType === 'video' ? 'Video' : 'Blog',
+      detectedExpert: detectedExpert,
+      useDifferentExpert: () => this.setState({ addTarget: 'new', addGuruId: null, addDetectedGuruId: null }),
+      backToLink: () => this.setState({ addPhase: 'link' }),
+      continueFromDetect: () => this.setState({ addPhase: 'processing' }),
+      detectContinueDisabled: detectContinueDisabled,
+      detectContinueStyle: detectContinueDisabled ? disabledBtnStyle : enabledBtnStyle,
+
+      // Direct mode — step 1: details (source type + url, guru already known)
+      detailsTitle: 'Add to ' + (addGuruContext ? addGuruContext.name : ''),
+      setSourceVideo: () => this.setState({ addSourceType: 'video' }),
+      setSourceBlog: () => this.setState({ addSourceType: 'blog' }),
+      sourceVideoStyle: this.activeChip(s.addSourceType === 'video') + 'display:flex; align-items:center; gap:7px;',
+      sourceBlogStyle: this.activeChip(s.addSourceType === 'blog') + 'display:flex; align-items:center; gap:7px;',
+      urlLabel: s.addSourceType === 'video' ? 'YouTube video URL' : 'Blog post URL',
+      urlPlaceholder: s.addSourceType === 'video' ? 'https://youtube.com/watch?v=...' : 'https://example.com/blog/post',
+      backFromDetails: () => this.setState({ screen: 'profile', selectedGuruId: s.addGuruId }),
+      continueToProcessing: () => this.setState({ addPhase: 'processing' }),
+      detailsContinueDisabled: detailsContinueDisabled,
+      detailsContinueStyle: detailsContinueDisabled ? disabledBtnStyle : enabledBtnStyle,
+
+      // Processing
+      showProcessingIntro: s.addMode === 'auto',
+      processingIntro: addTargetExisting
+        ? 'Matched to ' + (addGuruContext ? addGuruContext.name : '')
+        : 'Registered ' + (s.addName || 'this expert') + ' as new',
+      continueToReview: () => this.setState({ addPhase: 'review' }),
+
+      // Review
+      draftClaims: draftClaims,
+      backFromReview: () => this.setState({ addPhase: s.addMode === 'auto' ? 'detect' : 'details' }),
+      confirmLabel: 'Save ' + selectedDraftCount + (selectedDraftCount === 1 ? ' claim' : ' claims'),
+      confirmSave: () => this.setState({ addPhase: 'done', addSavedCount: selectedDraftCount }),
+
+      // Done
+      addSavedCount: s.addSavedCount,
+      doneBackLabel: addTargetExisting ? 'Back to profile' : 'Back to Watchlist',
+      doneBackHandler: addTargetExisting
+        ? () => this.setState({ screen: 'profile', selectedGuruId: s.addGuruId })
+        : () => this.goWatchlist(),
+      doneAgainLabel: addTargetExisting ? 'Add another video/post' : 'Add another link',
+      doneAgainHandler: addTargetExisting
+        ? () => this.goAddToGuru(s.addGuruId)
+        : () => this.goAddLink(),
+    };
+  }
+}
+</script>
+</body>
+</html>

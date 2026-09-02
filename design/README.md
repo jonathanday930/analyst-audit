@@ -1,13 +1,31 @@
 # UI mockup — for reference, not reuse
 
-`mockup/Main.dc.html` is the clickable prototype of the AnalystAudit frontend,
-built with Claude Design (a Claude Code skill). Live version (requires a
-Claude login to view):
-https://claude.ai/code/artifact/5a74ed4b-3c44-4221-afc4-9bdcdfba3003
+This is the clickable prototype of the AnalystAudit frontend, built with
+Claude Design (a Claude Code skill). Live version (requires a Claude login
+to view): https://claude.ai/code/artifact/5a74ed4b-3c44-4221-afc4-9bdcdfba3003
 
-`mockup/screenshots/` has a static PNG of each of the 5 screens
-(watchlist, browse-all, expert-profile, claim-detail, add-link-flow) for a
-quick visual reference that doesn't need any login.
+For viewing without a login (e.g. handing this to another coding tool), two
+options — **do not open `mockup/Main.dc.html` directly**, it's raw template
+source, not a webpage (see warning below):
+
+- `mockup/screenshots/` — a PNG per screen.
+- `mockup/static-html/` — a real, resolved HTML file per screen (open
+  directly in any browser, no login, no build step). Fully-resolved copy,
+  layout, and CSS; not interactive (buttons don't do anything) since it's a
+  snapshot, not the running app.
+
+Both cover all 5 screens: watchlist, browse-all, expert-profile,
+claim-detail, add-link-flow.
+
+## Don't open Main.dc.html in a browser
+
+`mockup/Main.dc.html` is Claude Design's own template source — it only
+renders correctly inside Claude Design's runtime. Opened directly in a
+plain browser, `{{handlebars}}` holes show up as literal text and the
+`<sc-if>`/`<sc-for>` conditionals/loops don't run (every screen's markup
+renders all at once, unfiltered) — it looks broken because it is missing
+the piece that resolves it. Use `static-html/` for a working preview, and
+`Main.dc.html` only for reading the source (next section).
 
 **What it's good for:** it is the source of truth for every screen, field,
 label, copy string, state transition, and interaction in the product —

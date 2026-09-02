@@ -12,7 +12,7 @@ whether a current buy/sell idea is worth acting on — but that final synthesis 
 (see MVP scope below).
 
 This is a sibling project to `../youtube_fact_checker`, which does single-video "would
-following this video's advice have paid off" analysis. `guru-ledger` is a different product,
+following this video's advice have paid off" analysis. `AnalystAudit` is a different product,
 not an evolution of it — it's stateful (persistent claim history per guru) where the other is
 deliberately stateless, and its claim schema is intentionally *not* a trade-action framing (see
 Claim schema below). Reusable infrastructure — the Claude structured-output client pattern,

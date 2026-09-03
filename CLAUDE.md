@@ -176,6 +176,10 @@ but shouldn't attempt to implement the extraction/evaluation prompts itself.
 
 ## Status
 
-UI/UX design is done (see prototype above). Backend, database, and real frontend build have not
-started; see `TASKS.md` for the current build-out backlog, split as described in "Division of
-labor" above.
+UI/UX design is done (see prototype above). Backend and frontend scaffolding, the DB schema/CRUD,
+the real matching algorithm, all 5 screens wired to real endpoints, and the ported infra
+(LLM client, ticker resolver, price data, YouTube transcript/metadata, blog fetcher) are done —
+see `TASKS.md` for the line-by-line record. Postgres has not been provisioned on Fly.io yet
+(billable infra action, needs explicit go-ahead). The claim-finder/claim-analyzer/meta-analyst
+prompts — the actual AI extraction and evaluation logic — are not started; they're being built
+separately per "Division of labor" above.

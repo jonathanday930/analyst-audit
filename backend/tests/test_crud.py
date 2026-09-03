@@ -7,10 +7,10 @@ from app.db import crud
 
 
 def _source(db: Session, name: str = "Analyst", channel: str = "UC123"):
-    guru = crud.create_guru(db, name=name)
+    analyst = crud.create_analyst(db, name=name)
     source, claim = crud.create_source_with_placeholder(
         db,
-        guru=guru,
+        analyst=analyst,
         source_type="video",
         url="https://youtu.be/dQw4w9WgXcQ",
         canonical_url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
@@ -22,13 +22,13 @@ def _source(db: Session, name: str = "Analyst", channel: str = "UC123"):
         youtube_channel_id=channel,
     )
     db.commit()
-    return guru, source, claim
+    return analyst, source, claim
 
 
 def test_create_list_get_and_match(db: Session) -> None:
-    guru, source, claim = _source(db)
-    assert crud.get_guru(db, guru.id).sources[0].id == source.id
-    assert crud.find_guru_for_source(db, source_type="video", identity="UC123").id == guru.id
+    analyst, source, claim = _source(db)
+    assert crud.get_analyst(db, analyst.id).sources[0].id == source.id
+    assert crud.find_analyst_for_source(db, source_type="video", identity="UC123").id == analyst.id
     assert crud.find_source(db, source_type="video", source_key="dQw4w9WgXcQ").id == source.id
     assert crud.list_claims(db, status="open")[0].id == claim.id
     assert claim.extraction_status == "pending"
@@ -50,10 +50,10 @@ def test_resolution_history_and_verdict_filter(db: Session) -> None:
 
 
 def test_duplicate_source_is_rejected(db: Session) -> None:
-    guru, _, _ = _source(db)
+    analyst, _, _ = _source(db)
     try:
         crud.create_source_with_placeholder(
-            db, guru=guru, source_type="video", url="x", canonical_url="x",
+            db, analyst=analyst, source_type="video", url="x", canonical_url="x",
             source_key="dQw4w9WgXcQ", title="duplicate", content="x",
         )
         db.commit()

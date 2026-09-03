@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
 from app.routes.claims import router as claims_router
-from app.routes.gurus import router as gurus_router
+from app.routes.analysts import router as analysts_router
 from app.routes.links import router as links_router
 
 logging.basicConfig(level=logging.INFO)
@@ -22,7 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(links_router)
-app.include_router(gurus_router)
+app.include_router(analysts_router)
 app.include_router(claims_router)
 
 

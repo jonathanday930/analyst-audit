@@ -20,8 +20,8 @@ class Base(DeclarativeBase):
     pass
 
 
-class Guru(Base):
-    __tablename__ = "gurus"
+class Analyst(Base):
+    __tablename__ = "analysts"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     name: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
@@ -29,8 +29,8 @@ class Guru(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow, nullable=False)
 
-    sources: Mapped[list[Source]] = relationship(back_populates="guru", cascade="all, delete-orphan")
-    claims: Mapped[list[Claim]] = relationship(back_populates="guru", cascade="all, delete-orphan")
+    sources: Mapped[list[Source]] = relationship(back_populates="analyst", cascade="all, delete-orphan")
+    claims: Mapped[list[Claim]] = relationship(back_populates="analyst", cascade="all, delete-orphan")
 
 
 class Source(Base):
@@ -39,13 +39,13 @@ class Source(Base):
         CheckConstraint("type IN ('video', 'blog')", name="ck_sources_type"),
         CheckConstraint("ingestion_status IN ('ready', 'failed')", name="ck_sources_ingestion_status"),
         UniqueConstraint("type", "source_key", name="uq_sources_type_source_key"),
-        Index("ix_sources_guru_id", "guru_id"),
+        Index("ix_sources_analyst_id", "analyst_id"),
         Index("ix_sources_youtube_channel_id", "youtube_channel_id"),
         Index("ix_sources_blog_domain", "blog_domain"),
     )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
-    guru_id: Mapped[str] = mapped_column(ForeignKey("gurus.id", ondelete="CASCADE"), nullable=False)
+    analyst_id: Mapped[str] = mapped_column(ForeignKey("analysts.id", ondelete="CASCADE"), nullable=False)
     type: Mapped[str] = mapped_column(String(20), nullable=False)
     url: Mapped[str] = mapped_column(Text, nullable=False)
     canonical_url: Mapped[str] = mapped_column(Text, nullable=False)
@@ -60,7 +60,7 @@ class Source(Base):
     ingestion_error: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
 
-    guru: Mapped[Guru] = relationship(back_populates="sources")
+    analyst: Mapped[Analyst] = relationship(back_populates="sources")
     claims: Mapped[list[Claim]] = relationship(back_populates="source", cascade="all, delete-orphan")
 
 
@@ -72,14 +72,14 @@ class Claim(Base):
         CheckConstraint("trigger_status IN ('waiting', 'triggered', 'expired') OR trigger_status IS NULL", name="ck_claims_trigger_status"),
         CheckConstraint("horizon IN ('short-term', 'swing', 'long-term', 'structural') OR horizon IS NULL", name="ck_claims_horizon"),
         CheckConstraint("target_window_end IS NULL OR target_window_start IS NULL OR target_window_end >= target_window_start", name="ck_claims_target_window_order"),
-        Index("ix_claims_guru_status", "guru_id", "status"),
+        Index("ix_claims_analyst_status", "analyst_id", "status"),
         Index("ix_claims_target_window_end", "target_window_end"),
         Index("ix_claims_trigger_deadline", "trigger_deadline"),
     )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     source_id: Mapped[str] = mapped_column(ForeignKey("sources.id", ondelete="CASCADE"), nullable=False)
-    guru_id: Mapped[str] = mapped_column(ForeignKey("gurus.id", ondelete="CASCADE"), nullable=False)
+    analyst_id: Mapped[str] = mapped_column(ForeignKey("analysts.id", ondelete="CASCADE"), nullable=False)
     extraction_status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
     asset_description: Mapped[str | None] = mapped_column(Text)
     suggested_ticker: Mapped[str | None] = mapped_column(String(30))
@@ -97,7 +97,7 @@ class Claim(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow, nullable=False)
 
     source: Mapped[Source] = relationship(back_populates="claims")
-    guru: Mapped[Guru] = relationship(back_populates="claims")
+    analyst: Mapped[Analyst] = relationship(back_populates="claims")
     evaluations: Mapped[list[ClaimEvaluation]] = relationship(back_populates="claim", cascade="all, delete-orphan", order_by="ClaimEvaluation.checked_at")
 
 

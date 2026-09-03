@@ -1,9 +1,9 @@
-# Guru test set
+# Analyst test set
 
 A curated starting list of finance YouTubers and specific videos to use once the claim-finder
 pipeline is built, for testing extraction quality across models. This is not wired into the app
 in any way; the app has no channel/feed tracking by design (see `../CLAUDE.md`, "Onboarding a
-new guru"). Each video URL below is meant to be pasted individually through the Add-link flow
+new analyst"). Each video URL below is meant to be pasted individually through the Add-link flow
 once it exists, or fed directly to a claim-finder prompt during prompt/model testing.
 
 Videos were picked for having clear, falsifiable, dated predictions (a price level, a named
@@ -51,7 +51,7 @@ Jordan McLain. Real-money picks sourced from consumer/cultural trend-spotting.
   event, worth tracking down on the channel directly since it's a good real-world-event
   condition test case.
 
-## 7 additional gurus
+## 7 additional analysts
 
 ### Coin Bureau
 https://www.youtube.com/@CoinBureau
@@ -128,8 +128,8 @@ Value-investing education, intrinsic/fair-value stock calls, "buy under $X" fram
   Bullish 2026 market call, plus the channel's usual specific buy-target prices.
 - "I F*ked Up... My INSANE Stock Market Prediction For 2026" -
   https://www.youtube.com/watch?v=fhgZms8iN1w
-  Same guru revisiting and correcting an earlier prediction; a strong test case for how the
-  pipeline should handle a guru's own walk-back of a prior claim.
+  Same analyst revisiting and correcting an earlier prediction; a strong test case for how the
+  pipeline should handle a analyst's own walk-back of a prior claim.
 
 ## Gaps to close before using as real seeds
 

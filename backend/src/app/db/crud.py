@@ -4,34 +4,34 @@ from typing import Any
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.db.models import Claim, ClaimEvaluation, Guru, Source
+from app.db.models import Claim, ClaimEvaluation, Analyst, Source
 
 
-def create_guru(db: Session, *, name: str, followed: bool = True) -> Guru:
-    guru = Guru(name=name.strip(), followed=followed)
-    db.add(guru)
+def create_analyst(db: Session, *, name: str, followed: bool = True) -> Analyst:
+    analyst = Analyst(name=name.strip(), followed=followed)
+    db.add(analyst)
     db.flush()
-    return guru
+    return analyst
 
 
-def list_gurus(db: Session, *, followed: bool | None = None) -> list[Guru]:
-    stmt: Select[tuple[Guru]] = select(Guru).order_by(Guru.name)
+def list_analysts(db: Session, *, followed: bool | None = None) -> list[Analyst]:
+    stmt: Select[tuple[Analyst]] = select(Analyst).order_by(Analyst.name)
     if followed is not None:
-        stmt = stmt.where(Guru.followed == followed)
+        stmt = stmt.where(Analyst.followed == followed)
     return list(db.scalars(stmt))
 
 
-def get_guru(db: Session, guru_id: str) -> Guru | None:
+def get_analyst(db: Session, analyst_id: str) -> Analyst | None:
     return db.scalar(
-        select(Guru)
-        .where(Guru.id == guru_id)
-        .options(selectinload(Guru.sources), selectinload(Guru.claims).selectinload(Claim.evaluations))
+        select(Analyst)
+        .where(Analyst.id == analyst_id)
+        .options(selectinload(Analyst.sources), selectinload(Analyst.claims).selectinload(Claim.evaluations))
     )
 
 
-def find_guru_for_source(db: Session, *, source_type: str, identity: str) -> Guru | None:
+def find_analyst_for_source(db: Session, *, source_type: str, identity: str) -> Analyst | None:
     identity_column = Source.youtube_channel_id if source_type == "video" else Source.blog_domain
-    return db.scalar(select(Guru).join(Source).where(identity_column == identity).limit(1))
+    return db.scalar(select(Analyst).join(Source).where(identity_column == identity).limit(1))
 
 
 def find_source(db: Session, *, source_type: str, source_key: str) -> Source | None:
@@ -41,7 +41,7 @@ def find_source(db: Session, *, source_type: str, source_key: str) -> Source | N
 def create_source_with_placeholder(
     db: Session,
     *,
-    guru: Guru,
+    analyst: Analyst,
     source_type: str,
     url: str,
     canonical_url: str,
@@ -54,7 +54,7 @@ def create_source_with_placeholder(
     blog_domain: str | None = None,
 ) -> tuple[Source, Claim]:
     source = Source(
-        guru=guru,
+        analyst=analyst,
         type=source_type,
         url=url,
         canonical_url=canonical_url,
@@ -67,7 +67,7 @@ def create_source_with_placeholder(
         blog_domain=blog_domain,
         ingestion_status="ready",
     )
-    claim = Claim(guru=guru, source=source, extraction_status="pending", status="open")
+    claim = Claim(analyst=analyst, source=source, extraction_status="pending", status="open")
     db.add_all([source, claim])
     db.flush()
     return source, claim
@@ -78,15 +78,15 @@ def list_claims(
     *,
     status: str | None = None,
     verdict: str | None = None,
-    guru_id: str | None = None,
+    analyst_id: str | None = None,
 ) -> list[Claim]:
     stmt = select(Claim).options(
-        selectinload(Claim.evaluations), selectinload(Claim.source), selectinload(Claim.guru)
+        selectinload(Claim.evaluations), selectinload(Claim.source), selectinload(Claim.analyst)
     ).order_by(Claim.created_at.desc())
     if status:
         stmt = stmt.where(Claim.status == status)
-    if guru_id:
-        stmt = stmt.where(Claim.guru_id == guru_id)
+    if analyst_id:
+        stmt = stmt.where(Claim.analyst_id == analyst_id)
     if verdict:
         ranked = select(
             ClaimEvaluation.claim_id,
@@ -106,7 +106,7 @@ def list_claims(
 def get_claim(db: Session, claim_id: str) -> Claim | None:
     return db.scalar(
         select(Claim).where(Claim.id == claim_id).options(
-            selectinload(Claim.evaluations), selectinload(Claim.source), selectinload(Claim.guru)
+            selectinload(Claim.evaluations), selectinload(Claim.source), selectinload(Claim.analyst)
         )
     )
 

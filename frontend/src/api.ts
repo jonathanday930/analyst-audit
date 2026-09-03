@@ -1,4 +1,4 @@
-import type { Benchmark, Claim, Guru, Horizon, LinkResponse } from './types'
+import type { Benchmark, Claim, Analyst, Horizon, LinkResponse } from './types'
 
 export class ApiError extends Error {}
 
@@ -35,7 +35,7 @@ function normalizeClaim(raw: Json, sources: Json[] = []): Claim {
   const horizon = (rawHorizon === 'short-term' ? 'short' : rawHorizon === 'long-term' || rawHorizon === 'structural' ? 'long' : rawHorizon) as Horizon | undefined
   const directResolution = raw.resolution as Json | null | undefined
   return {
-    id: String(raw.id), source_id: sourceId, guru_id: field(raw, 'guru_id', 'guruId'), extraction_status: extraction,
+    id: String(raw.id), source_id: sourceId, analyst_id: field(raw, 'analyst_id', 'analystId'), extraction_status: extraction,
     source: sourceRaw ? { id: String(sourceRaw.id), type: sourceRaw.type === 'youtube' ? 'video' : 'blog', url: sourceRaw.url, title: sourceRaw.title, published_at: field(sourceRaw, 'published_at', 'publishedAt') } : undefined,
     asset_description: field(raw, 'asset_description', 'assetDescription'), suggested_ticker: field(raw, 'suggested_ticker', 'suggestedTicker'),
     condition: field(raw, 'condition_trigger', 'conditionTrigger'), expected_outcome: field(raw, 'expected_outcome', 'expectedOutcome'),
@@ -48,7 +48,7 @@ function normalizeClaim(raw: Json, sources: Json[] = []): Claim {
   }
 }
 
-function normalizeGuru(raw: Json): Guru {
+function normalizeAnalyst(raw: Json): Analyst {
   const sources = (raw.sources ?? []) as Json[]
   return {
     id: String(raw.id), name: raw.name, followed: !!raw.followed,
@@ -63,32 +63,32 @@ function normalizeGuru(raw: Json): Guru {
   }
 }
 
-export async function listGurus(followed?: boolean): Promise<Guru[]> {
-  const result = await request<Json[] | { gurus: Json[] }>(`/api/gurus${query({ followed })}`)
-  return (Array.isArray(result) ? result : result.gurus).map(normalizeGuru)
+export async function listAnalysts(followed?: boolean): Promise<Analyst[]> {
+  const result = await request<Json[] | { analysts: Json[] }>(`/api/analysts${query({ followed })}`)
+  return (Array.isArray(result) ? result : result.analysts).map(normalizeAnalyst)
 }
-export async function getGuru(id: string): Promise<Guru> { return normalizeGuru(await request<Json>(`/api/gurus/${encodeURIComponent(id)}`)) }
-export async function listClaims(guruId?: string, status?: string, verdict?: string): Promise<Claim[]> {
-  const result = await request<Json[] | { claims: Json[] }>(`/api/claims${query({ guru_id: guruId, status, verdict })}`)
+export async function getAnalyst(id: string): Promise<Analyst> { return normalizeAnalyst(await request<Json>(`/api/analysts/${encodeURIComponent(id)}`)) }
+export async function listClaims(analystId?: string, status?: string, verdict?: string): Promise<Claim[]> {
+  const result = await request<Json[] | { claims: Json[] }>(`/api/claims${query({ analyst_id: analystId, status, verdict })}`)
   return (Array.isArray(result) ? result : result.claims).map((claim) => normalizeClaim(claim))
 }
 export async function getClaim(id: string): Promise<Claim> { return normalizeClaim(await request<Json>(`/api/claims/${encodeURIComponent(id)}`)) }
-export function setFollowed(id: string, followed: boolean): Promise<Guru> {
-  return request<Json>(`/api/gurus/${encodeURIComponent(id)}/follow`, {
+export function setFollowed(id: string, followed: boolean): Promise<Analyst> {
+  return request<Json>(`/api/analysts/${encodeURIComponent(id)}/follow`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ followed }),
-  }).then(normalizeGuru)
+  }).then(normalizeAnalyst)
 }
-export async function addLink(body: { url: string; guru_id?: string; guru_name?: string; force_new?: boolean }): Promise<LinkResponse> {
+export async function addLink(body: { url: string; analyst_id?: string; analyst_name?: string; force_new?: boolean }): Promise<LinkResponse> {
   const raw = await request<Json>('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
   const wireStatus = raw.status as LinkResponse['status'] | undefined
-  const requiresName = wireStatus === 'requires_guru_name' || (field<boolean>(raw, 'requires_guru_name', 'requiresGuruName') ?? false)
-  const matchedRaw = field<Json>(raw, 'matched_guru', 'matchedGuru')
-  const matched = matchedRaw ? normalizeGuru(matchedRaw) : null
+  const requiresName = wireStatus === 'requires_analyst_name' || (field<boolean>(raw, 'requires_analyst_name', 'requiresAnalystName') ?? false)
+  const matchedRaw = field<Json>(raw, 'matched_analyst', 'matchedAnalyst')
+  const matched = matchedRaw ? normalizeAnalyst(matchedRaw) : null
   const claimRaw = raw.claim as Json | undefined
   const sourceRaw = raw.source as Json | undefined
   const claimsRaw = Array.isArray(raw.claims) ? raw.claims as Json[] : claimRaw ? [claimRaw] : []
   const draftsRaw = field<Json[]>(raw, 'draft_claims', 'draftClaims') ?? []
   const sourceType = field<string>(raw, 'source_type', 'sourceType') ?? sourceRaw?.type
-  const guruRaw = raw.guru as Json | undefined
-  return { status: requiresName ? 'requires_guru_name' : wireStatus ?? 'pending', source_type: sourceType === 'youtube' ? 'video' : sourceType as LinkResponse['source_type'], matched_guru: matched, guru: guruRaw ? normalizeGuru(guruRaw) : matched ?? undefined, source_id: field(raw, 'source_id', 'sourceId') ?? sourceRaw?.id as string | undefined, claims: claimsRaw.map((claim) => normalizeClaim(claim, sourceRaw ? [sourceRaw] : [])), draft_claims: draftsRaw.map((claim) => normalizeClaim(claim)), message: raw.message as string | undefined }
+  const analystRaw = raw.analyst as Json | undefined
+  return { status: requiresName ? 'requires_analyst_name' : wireStatus ?? 'pending', source_type: sourceType === 'youtube' ? 'video' : sourceType as LinkResponse['source_type'], matched_analyst: matched, analyst: analystRaw ? normalizeAnalyst(analystRaw) : matched ?? undefined, source_id: field(raw, 'source_id', 'sourceId') ?? sourceRaw?.id as string | undefined, claims: claimsRaw.map((claim) => normalizeClaim(claim, sourceRaw ? [sourceRaw] : [])), draft_claims: draftsRaw.map((claim) => normalizeClaim(claim)), message: raw.message as string | undefined }
 }

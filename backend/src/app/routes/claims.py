@@ -13,10 +13,10 @@ router = APIRouter(prefix="/api/claims", tags=["claims"])
 def claims(
     status: str | None = Query(default=None, pattern="^(open|resolved|expired)$"),
     verdict: str | None = Query(default=None, pattern="^(good|bad|ambiguous)$"),
-    guru_id: str | None = None,
+    analyst_id: str | None = None,
     db: Session = Depends(get_db),
 ) -> list[ClaimOut]:
-    return [claim_out(claim) for claim in crud.list_claims(db, status=status, verdict=verdict, guru_id=guru_id)]
+    return [claim_out(claim) for claim in crud.list_claims(db, status=status, verdict=verdict, analyst_id=analyst_id)]
 
 
 @router.get("/{claim_id}", response_model=ClaimOut)

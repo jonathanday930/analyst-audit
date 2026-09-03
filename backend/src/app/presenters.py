@@ -1,25 +1,25 @@
 from collections import Counter
 from datetime import datetime, time, timezone
 
-from app.db.models import Claim, Guru
-from app.schemas import ClaimOut, EvaluationOut, GuruRef, GuruSummary, ResolutionOut, SourceSummary
+from app.db.models import Claim, Analyst
+from app.schemas import ClaimOut, EvaluationOut, AnalystRef, AnalystSummary, ResolutionOut, SourceSummary
 
 
-def guru_summary(guru: Guru) -> GuruSummary:
-    resolved = sum(claim.status == "resolved" for claim in guru.claims)
-    open_count = sum(claim.status == "open" for claim in guru.claims)
-    source_counts = Counter(source.type for source in guru.sources)
+def analyst_summary(analyst: Analyst) -> AnalystSummary:
+    resolved = sum(claim.status == "resolved" for claim in analyst.claims)
+    open_count = sum(claim.status == "open" for claim in analyst.claims)
+    source_counts = Counter(source.type for source in analyst.sources)
     primary = source_counts.most_common(1)[0][0] if source_counts else None
     active_values = [
         datetime.combine(source.published_at, time.min, tzinfo=timezone.utc)
         if source.published_at else source.created_at
-        for source in guru.sources
+        for source in analyst.sources
     ]
-    return GuruSummary(
-        id=guru.id,
-        name=guru.name,
-        followed=guru.followed,
-        claim_count=len(guru.claims),
+    return AnalystSummary(
+        id=analyst.id,
+        name=analyst.name,
+        followed=analyst.followed,
+        claim_count=len(analyst.claims),
         resolved_count=resolved,
         open_count=open_count,
         last_active_at=max(active_values) if active_values else None,
@@ -43,7 +43,7 @@ def claim_out(claim: Claim) -> ClaimOut:
     return ClaimOut(
         id=claim.id,
         source_id=claim.source_id,
-        guru_id=claim.guru_id,
+        analyst_id=claim.analyst_id,
         extraction_status=claim.extraction_status,
         asset_description=claim.asset_description,
         suggested_ticker=claim.suggested_ticker,
@@ -59,7 +59,7 @@ def claim_out(claim: Claim) -> ClaimOut:
         status=claim.status,
         evaluations=evaluations,
         source=SourceSummary.model_validate(claim.source),
-        guru=GuruRef(id=claim.guru.id, name=claim.guru.name),
+        analyst=AnalystRef(id=claim.analyst.id, name=claim.analyst.name),
         latest_verdict=latest.verdict if latest else None,
         verdict=latest.verdict if latest else None,
         resolution=resolution,

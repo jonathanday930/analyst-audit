@@ -38,7 +38,7 @@
 const state = {
   screen: 'watchlist',
   listScreen: 'watchlist',
-  selectedGuruId: 'macro-chartist',
+  selectedAnalystId: 'macro-chartist',
   selectedClaimId: 'c1',
   claimFilter: 'all',
   searchQuery: '',
@@ -52,8 +52,8 @@ const state = {
   addMode: 'direct',
   addPhase: 'details',
   addTarget: null,
-  addGuruId: null,
-  addDetectedGuruId: null,
+  addAnalystId: null,
+  addDetectedAnalystId: null,
   addName: '',
   addSourceType: 'video',
   addUrl: '',
@@ -64,7 +64,7 @@ const state = {
 function setState(patch) { Object.assign(state, patch); render(); }
 
 // ---------- fixture data ----------
-function getGurus() {
+function getAnalysts() {
   return [
     { id: 'macro-chartist', name: 'MacroChartist', initials: 'MC', score: 78, claims: 41, resolved: 29, open: 12, lastActive: '2 days ago', recency: 2, primarySource: 'video', categories: [{ label: 'Macro', pct: 82 }, { label: 'Rates', pct: 74 }, { label: 'Equities', pct: 61 }] },
     { id: 'crypto-compass', name: 'CryptoCompass', initials: 'CC', score: 61, claims: 67, resolved: 50, open: 17, lastActive: 'today', recency: 0, primarySource: 'video', categories: [{ label: 'Crypto', pct: 58 }, { label: 'Altcoins', pct: 65 }] },
@@ -76,20 +76,20 @@ function getGurus() {
 
 function getClaims() {
   return [
-    { id: 'c1', guruId: 'macro-chartist', asset: 'S&P 500', ticker: 'SPY', condition: 'None — unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Grinds higher into year-end, new highs', horizon: 'swing', timeframeText: '"next few months"', windowText: 'Oct 15 – Dec 20, 2026', status: 'open', verdict: null, rationale: null, sourceTitle: 'Where Markets Go From Here', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=wmg-demo1', claimDate: 'Sep 1, 2026', guruName: 'MacroChartist' },
-    { id: 'c2', guruId: 'macro-chartist', asset: '10-Year Treasury Yield', ticker: '^TNX', condition: 'If the Fed cuts rates at the September meeting', conditionType: 'EVENT TRIGGER', outcome: 'Yields fall below 3.8%', horizon: 'short', timeframeText: '"within 6 weeks of the cut"', windowText: 'Sep 18 – Oct 30, 2026', status: 'resolved', verdict: 'good', rationale: 'Fed cut on Sep 17; the 10-year yield fell to 3.71% by Oct 22 — condition triggered and the outcome was met within the window.', evaluatedDate: 'Oct 31, 2026', sourceTitle: 'Fed Week Playbook', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=fedweek-demo', claimDate: 'Sep 10, 2026', guruName: 'MacroChartist' },
-    { id: 'c3', guruId: 'macro-chartist', asset: 'Crude Oil', ticker: 'CL=F', condition: 'If Iran reaches a ceasefire', conditionType: 'EVENT TRIGGER', outcome: 'Oil drops toward $60/barrel', horizon: 'short', timeframeText: '"within a month of any ceasefire"', windowText: 'Event-based — no fixed calendar dates', status: 'resolved', verdict: 'bad', rationale: 'Ceasefire held from Aug 3; oil fell only to $71 by Sep 3, well above the $60 target within the stated window.', evaluatedDate: 'Sep 4, 2026', tradeReturnValue: -8.7, tradeReturnLabel: '−8.7%', benchmarks: [{ label: 'S&P 500', ticker: 'SPY', value: 2.1, display: '+2.1%' }, { label: 'Nasdaq', ticker: 'QQQ', value: 3.4, display: '+3.4%' }], sourceTitle: 'Geopolitics & Crude', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=geocrude-demo', claimDate: 'Jul 28, 2026', guruName: 'MacroChartist' },
-    { id: 'c4', guruId: 'macro-chartist', asset: 'Regional Banks', ticker: 'KRE', condition: 'None — unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Further weakness — avoid the group', horizon: 'swing', timeframeText: '"next 2-3 months"', windowText: 'Sep 1 – Nov 30, 2026', status: 'open', verdict: null, rationale: null, sourceTitle: 'Where Markets Go From Here', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=wmg-demo1', claimDate: 'Sep 1, 2026', guruName: 'MacroChartist' },
-    { id: 'c5', guruId: 'macro-chartist', asset: 'Gold', ticker: 'GC=F', condition: 'None — unconditional', conditionType: 'UNCONDITIONAL', outcome: 'New highs above $2,900', horizon: 'long', timeframeText: '"long-term bullish" — no fixed date given', windowText: 'Open-ended — rechecked periodically', status: 'open', verdict: null, rationale: null, sourceTitle: 'Gold’s Decade', sourceType: 'blog', sourceUrl: 'https://exampleblog.com/golds-decade', claimDate: 'Aug 12, 2026', guruName: 'MacroChartist' },
-    { id: 'c6', guruId: 'crypto-compass', asset: 'Bitcoin', ticker: 'BTC-USD', condition: 'None — unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Rallies to new highs above $130k', horizon: 'swing', timeframeText: '"next 3-4 months"', windowText: 'Sep 1 – Dec 31, 2026', status: 'open', verdict: null, rationale: null, sourceTitle: 'Cycle Top Watch', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=cycletop-demo', claimDate: 'Aug 30, 2026', guruName: 'CryptoCompass' },
-    { id: 'c7', guruId: 'crypto-compass', asset: 'Ethereum', ticker: 'ETH-USD', condition: 'If BTC breaks above $130k first', conditionType: 'PRICE TRIGGER', outcome: 'Follows to $6,500', horizon: 'short', timeframeText: '"within 6 weeks of that breakout"', windowText: 'Trigger not yet met', status: 'open', verdict: null, rationale: null, sourceTitle: 'Cycle Top Watch', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=cycletop-demo', claimDate: 'Aug 30, 2026', guruName: 'CryptoCompass' },
-    { id: 'c8', guruId: 'value-vane', asset: 'Small-cap value (IWN)', ticker: 'IWN', condition: 'None — unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Outperforms growth over the next year', horizon: 'long', timeframeText: '"over the next year"', windowText: 'Jan 1 – Dec 31, 2026', status: 'resolved', verdict: 'good', rationale: 'IWN +14.2% vs. IWO +8.9% over the stated window — value outperformed growth as called.', evaluatedDate: 'Jan 3, 2027', tradeReturnValue: 14.2, tradeReturnLabel: '+14.2%', benchmarks: [{ label: 'S&P 500', ticker: 'SPY', value: 9.6, display: '+9.6%' }, { label: 'Nasdaq', ticker: 'QQQ', value: 11.8, display: '+11.8%' }], sourceTitle: 'The Case for Boring Stocks', sourceType: 'blog', sourceUrl: 'https://exampleblog.com/case-for-boring-stocks', claimDate: 'Jan 6, 2026', guruName: 'ValueVane' },
-    { id: 'c9', guruId: 'value-vane', asset: 'Regional homebuilders', ticker: 'XHB', condition: 'None — unconditional', conditionType: 'UNCONDITIONAL', outcome: '20% upside as rates ease', horizon: 'swing', timeframeText: '"next 4-5 months"', windowText: 'Aug 20 – Jan 20, 2027', status: 'open', verdict: null, rationale: null, sourceTitle: 'Rate Cuts and Housing', sourceType: 'blog', sourceUrl: 'https://exampleblog.com/rate-cuts-and-housing', claimDate: 'Aug 20, 2026', guruName: 'ValueVane' },
-    { id: 'c10', guruId: 'oilpatch-ollie', asset: 'Crude Oil', ticker: 'CL=F', condition: 'None — unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Breaks $100 on supply crunch', horizon: 'swing', timeframeText: '"by year-end"', windowText: 'Jun 1 – Dec 31, 2026', status: 'resolved', verdict: 'bad', rationale: 'Oil peaked at $84 in the window and never approached $100 — the supply crunch thesis did not play out.', evaluatedDate: 'Jan 1, 2027', tradeReturnValue: 7.7, tradeReturnLabel: '+7.7%', benchmarks: [{ label: 'S&P 500', ticker: 'SPY', value: 11.2, display: '+11.2%' }, { label: 'Nasdaq', ticker: 'QQQ', value: 13.5, display: '+13.5%' }], sourceTitle: 'Why $100 Oil Is Coming', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=oil100-demo', claimDate: 'Jun 1, 2026', guruName: 'OilPatch Ollie' },
-    { id: 'c11', guruId: 'oilpatch-ollie', asset: 'Natural Gas', ticker: 'NG=F', condition: 'If winter demand spikes', conditionType: 'EVENT TRIGGER', outcome: 'Prices double', horizon: 'short', timeframeText: '"within the cold snap"', windowText: 'Trigger not yet met', status: 'open', verdict: null, rationale: null, sourceTitle: 'Winter Setup', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=wintersetup-demo', claimDate: 'Aug 25, 2026', guruName: 'OilPatch Ollie' },
-    { id: 'c12', guruId: 'swing-sensei', asset: 'Semiconductors', ticker: 'SMH', condition: 'None — unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Next leg up on AI capex', horizon: 'swing', timeframeText: '"next couple months"', windowText: 'Jul 1 – Sep 15, 2026', status: 'resolved', verdict: 'good', rationale: 'SMH rose from $238 to $271 (+13.9%) over the window — the call paid off.', evaluatedDate: 'Sep 16, 2026', tradeReturnValue: 13.9, tradeReturnLabel: '+13.9%', benchmarks: [{ label: 'S&P 500', ticker: 'SPY', value: 4.8, display: '+4.8%' }, { label: 'Nasdaq', ticker: 'QQQ', value: 6.1, display: '+6.1%' }], sourceTitle: 'AI Capex Isn’t Slowing', sourceType: 'blog', sourceUrl: 'https://exampleblog.com/ai-capex-isnt-slowing', claimDate: 'Jul 1, 2026', guruName: 'SwingSensei' },
-    { id: 'c13', guruId: 'swing-sensei', asset: 'Regional Banks', ticker: 'KRE', condition: 'If credit conditions worsen', conditionType: 'EVENT TRIGGER', outcome: 'Another leg down', horizon: 'short', timeframeText: '"in the following weeks"', windowText: 'Trigger not yet met', status: 'open', verdict: null, rationale: null, sourceTitle: 'Credit Cracks', sourceType: 'blog', sourceUrl: 'https://exampleblog.com/credit-cracks', claimDate: 'Aug 18, 2026', guruName: 'SwingSensei' },
-    { id: 'c14', guruId: 'oilpatch-ollie', asset: 'Natural Gas', ticker: 'NG=F', condition: 'If a major pipeline outage hits the Gulf Coast', conditionType: 'EVENT TRIGGER', outcome: 'Prices spike above $6/MMBtu', horizon: 'short', timeframeText: '"within weeks of any outage"', windowText: 'Trigger deadline passed — condition never triggered', status: 'expired', verdict: null, rationale: null, sourceTitle: 'Gulf Coast Risk Watch', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=gulfrisk-demo', claimDate: 'Jul 10, 2025', guruName: 'OilPatch Ollie' },
+    { id: 'c1', analystId: 'macro-chartist', asset: 'S&P 500', ticker: 'SPY', condition: 'None — unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Grinds higher into year-end, new highs', horizon: 'swing', timeframeText: '"next few months"', windowText: 'Oct 15 – Dec 20, 2026', status: 'open', verdict: null, rationale: null, sourceTitle: 'Where Markets Go From Here', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=wmg-demo1', claimDate: 'Sep 1, 2026', analystName: 'MacroChartist' },
+    { id: 'c2', analystId: 'macro-chartist', asset: '10-Year Treasury Yield', ticker: '^TNX', condition: 'If the Fed cuts rates at the September meeting', conditionType: 'EVENT TRIGGER', outcome: 'Yields fall below 3.8%', horizon: 'short', timeframeText: '"within 6 weeks of the cut"', windowText: 'Sep 18 – Oct 30, 2026', status: 'resolved', verdict: 'good', rationale: 'Fed cut on Sep 17; the 10-year yield fell to 3.71% by Oct 22 — condition triggered and the outcome was met within the window.', evaluatedDate: 'Oct 31, 2026', sourceTitle: 'Fed Week Playbook', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=fedweek-demo', claimDate: 'Sep 10, 2026', analystName: 'MacroChartist' },
+    { id: 'c3', analystId: 'macro-chartist', asset: 'Crude Oil', ticker: 'CL=F', condition: 'If Iran reaches a ceasefire', conditionType: 'EVENT TRIGGER', outcome: 'Oil drops toward $60/barrel', horizon: 'short', timeframeText: '"within a month of any ceasefire"', windowText: 'Event-based — no fixed calendar dates', status: 'resolved', verdict: 'bad', rationale: 'Ceasefire held from Aug 3; oil fell only to $71 by Sep 3, well above the $60 target within the stated window.', evaluatedDate: 'Sep 4, 2026', tradeReturnValue: -8.7, tradeReturnLabel: '−8.7%', benchmarks: [{ label: 'S&P 500', ticker: 'SPY', value: 2.1, display: '+2.1%' }, { label: 'Nasdaq', ticker: 'QQQ', value: 3.4, display: '+3.4%' }], sourceTitle: 'Geopolitics & Crude', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=geocrude-demo', claimDate: 'Jul 28, 2026', analystName: 'MacroChartist' },
+    { id: 'c4', analystId: 'macro-chartist', asset: 'Regional Banks', ticker: 'KRE', condition: 'None — unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Further weakness — avoid the group', horizon: 'swing', timeframeText: '"next 2-3 months"', windowText: 'Sep 1 – Nov 30, 2026', status: 'open', verdict: null, rationale: null, sourceTitle: 'Where Markets Go From Here', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=wmg-demo1', claimDate: 'Sep 1, 2026', analystName: 'MacroChartist' },
+    { id: 'c5', analystId: 'macro-chartist', asset: 'Gold', ticker: 'GC=F', condition: 'None — unconditional', conditionType: 'UNCONDITIONAL', outcome: 'New highs above $2,900', horizon: 'long', timeframeText: '"long-term bullish" — no fixed date given', windowText: 'Open-ended — rechecked periodically', status: 'open', verdict: null, rationale: null, sourceTitle: 'Gold’s Decade', sourceType: 'blog', sourceUrl: 'https://exampleblog.com/golds-decade', claimDate: 'Aug 12, 2026', analystName: 'MacroChartist' },
+    { id: 'c6', analystId: 'crypto-compass', asset: 'Bitcoin', ticker: 'BTC-USD', condition: 'None — unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Rallies to new highs above $130k', horizon: 'swing', timeframeText: '"next 3-4 months"', windowText: 'Sep 1 – Dec 31, 2026', status: 'open', verdict: null, rationale: null, sourceTitle: 'Cycle Top Watch', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=cycletop-demo', claimDate: 'Aug 30, 2026', analystName: 'CryptoCompass' },
+    { id: 'c7', analystId: 'crypto-compass', asset: 'Ethereum', ticker: 'ETH-USD', condition: 'If BTC breaks above $130k first', conditionType: 'PRICE TRIGGER', outcome: 'Follows to $6,500', horizon: 'short', timeframeText: '"within 6 weeks of that breakout"', windowText: 'Trigger not yet met', status: 'open', verdict: null, rationale: null, sourceTitle: 'Cycle Top Watch', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=cycletop-demo', claimDate: 'Aug 30, 2026', analystName: 'CryptoCompass' },
+    { id: 'c8', analystId: 'value-vane', asset: 'Small-cap value (IWN)', ticker: 'IWN', condition: 'None — unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Outperforms growth over the next year', horizon: 'long', timeframeText: '"over the next year"', windowText: 'Jan 1 – Dec 31, 2026', status: 'resolved', verdict: 'good', rationale: 'IWN +14.2% vs. IWO +8.9% over the stated window — value outperformed growth as called.', evaluatedDate: 'Jan 3, 2027', tradeReturnValue: 14.2, tradeReturnLabel: '+14.2%', benchmarks: [{ label: 'S&P 500', ticker: 'SPY', value: 9.6, display: '+9.6%' }, { label: 'Nasdaq', ticker: 'QQQ', value: 11.8, display: '+11.8%' }], sourceTitle: 'The Case for Boring Stocks', sourceType: 'blog', sourceUrl: 'https://exampleblog.com/case-for-boring-stocks', claimDate: 'Jan 6, 2026', analystName: 'ValueVane' },
+    { id: 'c9', analystId: 'value-vane', asset: 'Regional homebuilders', ticker: 'XHB', condition: 'None — unconditional', conditionType: 'UNCONDITIONAL', outcome: '20% upside as rates ease', horizon: 'swing', timeframeText: '"next 4-5 months"', windowText: 'Aug 20 – Jan 20, 2027', status: 'open', verdict: null, rationale: null, sourceTitle: 'Rate Cuts and Housing', sourceType: 'blog', sourceUrl: 'https://exampleblog.com/rate-cuts-and-housing', claimDate: 'Aug 20, 2026', analystName: 'ValueVane' },
+    { id: 'c10', analystId: 'oilpatch-ollie', asset: 'Crude Oil', ticker: 'CL=F', condition: 'None — unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Breaks $100 on supply crunch', horizon: 'swing', timeframeText: '"by year-end"', windowText: 'Jun 1 – Dec 31, 2026', status: 'resolved', verdict: 'bad', rationale: 'Oil peaked at $84 in the window and never approached $100 — the supply crunch thesis did not play out.', evaluatedDate: 'Jan 1, 2027', tradeReturnValue: 7.7, tradeReturnLabel: '+7.7%', benchmarks: [{ label: 'S&P 500', ticker: 'SPY', value: 11.2, display: '+11.2%' }, { label: 'Nasdaq', ticker: 'QQQ', value: 13.5, display: '+13.5%' }], sourceTitle: 'Why $100 Oil Is Coming', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=oil100-demo', claimDate: 'Jun 1, 2026', analystName: 'OilPatch Ollie' },
+    { id: 'c11', analystId: 'oilpatch-ollie', asset: 'Natural Gas', ticker: 'NG=F', condition: 'If winter demand spikes', conditionType: 'EVENT TRIGGER', outcome: 'Prices double', horizon: 'short', timeframeText: '"within the cold snap"', windowText: 'Trigger not yet met', status: 'open', verdict: null, rationale: null, sourceTitle: 'Winter Setup', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=wintersetup-demo', claimDate: 'Aug 25, 2026', analystName: 'OilPatch Ollie' },
+    { id: 'c12', analystId: 'swing-sensei', asset: 'Semiconductors', ticker: 'SMH', condition: 'None — unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Next leg up on AI capex', horizon: 'swing', timeframeText: '"next couple months"', windowText: 'Jul 1 – Sep 15, 2026', status: 'resolved', verdict: 'good', rationale: 'SMH rose from $238 to $271 (+13.9%) over the window — the call paid off.', evaluatedDate: 'Sep 16, 2026', tradeReturnValue: 13.9, tradeReturnLabel: '+13.9%', benchmarks: [{ label: 'S&P 500', ticker: 'SPY', value: 4.8, display: '+4.8%' }, { label: 'Nasdaq', ticker: 'QQQ', value: 6.1, display: '+6.1%' }], sourceTitle: 'AI Capex Isn’t Slowing', sourceType: 'blog', sourceUrl: 'https://exampleblog.com/ai-capex-isnt-slowing', claimDate: 'Jul 1, 2026', analystName: 'SwingSensei' },
+    { id: 'c13', analystId: 'swing-sensei', asset: 'Regional Banks', ticker: 'KRE', condition: 'If credit conditions worsen', conditionType: 'EVENT TRIGGER', outcome: 'Another leg down', horizon: 'short', timeframeText: '"in the following weeks"', windowText: 'Trigger not yet met', status: 'open', verdict: null, rationale: null, sourceTitle: 'Credit Cracks', sourceType: 'blog', sourceUrl: 'https://exampleblog.com/credit-cracks', claimDate: 'Aug 18, 2026', analystName: 'SwingSensei' },
+    { id: 'c14', analystId: 'oilpatch-ollie', asset: 'Natural Gas', ticker: 'NG=F', condition: 'If a major pipeline outage hits the Gulf Coast', conditionType: 'EVENT TRIGGER', outcome: 'Prices spike above $6/MMBtu', horizon: 'short', timeframeText: '"within weeks of any outage"', windowText: 'Trigger deadline passed — condition never triggered', status: 'expired', verdict: null, rationale: null, sourceTitle: 'Gulf Coast Risk Watch', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=gulfrisk-demo', claimDate: 'Jul 10, 2025', analystName: 'OilPatch Ollie' },
   ];
 }
 
@@ -149,14 +149,14 @@ function detectExpert(url, experts) {
   }) || null;
 }
 function runDetection() {
-  const gurusRaw = getGurus();
+  const analystsRaw = getAnalysts();
   const sourceType = detectSourceType(state.addUrl);
-  const match = detectExpert(state.addUrl, gurusRaw);
+  const match = detectExpert(state.addUrl, analystsRaw);
   setState({
     addPhase: 'detect', addSourceType: sourceType,
-    addDetectedGuruId: match ? match.id : null,
+    addDetectedAnalystId: match ? match.id : null,
     addTarget: match ? 'existing' : 'new',
-    addGuruId: match ? match.id : null,
+    addAnalystId: match ? match.id : null,
   });
 }
 
@@ -165,14 +165,14 @@ function goWatchlist() { setState({ screen: 'watchlist', listScreen: 'watchlist'
 function goBrowse() { setState({ screen: 'browse', listScreen: 'browse' }); }
 function goAddLink() {
   setState({
-    screen: 'add', addMode: 'auto', addPhase: 'link', addTarget: null, addGuruId: null,
-    addDetectedGuruId: null, addName: '', addSourceType: 'video', addUrl: '',
+    screen: 'add', addMode: 'auto', addPhase: 'link', addTarget: null, addAnalystId: null,
+    addDetectedAnalystId: null, addName: '', addSourceType: 'video', addUrl: '',
     addSelected: {},
   });
 }
-function goAddToGuru(guruId) {
+function goAddToAnalyst(analystId) {
   setState({
-    screen: 'add', addMode: 'direct', addPhase: 'details', addTarget: 'existing', addGuruId: guruId,
+    screen: 'add', addMode: 'direct', addPhase: 'details', addTarget: 'existing', addAnalystId: analystId,
     addName: '', addSourceType: 'video', addUrl: '',
     addSelected: {},
   });
@@ -193,11 +193,11 @@ function confirmSave() {
   setState({ addPhase: 'done', addSavedCount: vals.selectedDraftCount });
 }
 function doneBack() {
-  if (state.addTarget === 'existing') setState({ screen: 'profile', selectedGuruId: state.addGuruId });
+  if (state.addTarget === 'existing') setState({ screen: 'profile', selectedAnalystId: state.addAnalystId });
   else goWatchlist();
 }
 function doneAgain() {
-  if (state.addTarget === 'existing') goAddToGuru(state.addGuruId);
+  if (state.addTarget === 'existing') goAddToAnalyst(state.addAnalystId);
   else goAddLink();
 }
 
@@ -206,10 +206,10 @@ function handleAction(act, id) {
     case 'goWatchlist': goWatchlist(); break;
     case 'goBrowse': goBrowse(); break;
     case 'goAddLink': goAddLink(); break;
-    case 'selectGuru': setState({ screen: 'profile', selectedGuruId: id, claimFilter: 'all' }); break;
+    case 'selectAnalyst': setState({ screen: 'profile', selectedAnalystId: id, claimFilter: 'all' }); break;
     case 'toggleFollow': toggleFollow(id); break;
     case 'backToList': setState({ screen: state.listScreen }); break;
-    case 'addToGuru': goAddToGuru(id); break;
+    case 'addToAnalyst': goAddToAnalyst(id); break;
     case 'filterAll': setState({ claimFilter: 'all' }); break;
     case 'filterOpen': setState({ claimFilter: 'open' }); break;
     case 'filterResolved': setState({ claimFilter: 'resolved' }); break;
@@ -217,17 +217,17 @@ function handleAction(act, id) {
     case 'backFromClaim': {
       const claimsRaw = getClaims();
       const c = claimsRaw.find((x) => x.id === state.selectedClaimId) || claimsRaw[0];
-      setState({ screen: 'profile', selectedGuruId: c.guruId });
+      setState({ screen: 'profile', selectedAnalystId: c.analystId });
       break;
     }
     case 'backFromLink': setState({ screen: state.listScreen }); break;
     case 'runDetection': runDetection(); break;
-    case 'useDifferentExpert': setState({ addTarget: 'new', addGuruId: null, addDetectedGuruId: null }); break;
+    case 'useDifferentExpert': setState({ addTarget: 'new', addAnalystId: null, addDetectedAnalystId: null }); break;
     case 'backToLink': setState({ addPhase: 'link' }); break;
     case 'continueFromDetect': setState({ addPhase: 'processing' }); break;
     case 'setSourceVideo': setState({ addSourceType: 'video' }); break;
     case 'setSourceBlog': setState({ addSourceType: 'blog' }); break;
-    case 'backFromDetails': setState({ screen: 'profile', selectedGuruId: state.addGuruId }); break;
+    case 'backFromDetails': setState({ screen: 'profile', selectedAnalystId: state.addAnalystId }); break;
     case 'continueToProcessing': setState({ addPhase: 'processing' }); break;
     case 'continueToReview': setState({ addPhase: 'review' }); break;
     case 'toggleDraft': toggleDraft(id); break;
@@ -241,15 +241,15 @@ function handleAction(act, id) {
 // ---------- computed view model (mirrors the original mockup's renderVals()) ----------
 function computeVals() {
   const s = state;
-  const gurusRaw = getGurus();
+  const analystsRaw = getAnalysts();
   const claimsRaw = getClaims();
   const draftRaw = getDraftClaims();
 
-  const sorted = gurusRaw.slice().sort((a, b) => b.score - a.score);
+  const sorted = analystsRaw.slice().sort((a, b) => b.score - a.score);
   const query = s.searchQuery.trim().toLowerCase();
-  const totalClaims = gurusRaw.reduce((sum, g) => sum + g.claims, 0);
+  const totalClaims = analystsRaw.reduce((sum, g) => sum + g.claims, 0);
 
-  const gurus = sorted.map((g) => {
+  const analysts = sorted.map((g) => {
     const followed = !!s.followed[g.id];
     return {
       ...g,
@@ -267,18 +267,18 @@ function computeVals() {
   });
 
   const matchesQuery = (g) => query === '' || g.name.toLowerCase().indexOf(query) !== -1;
-  const browseGurus = gurus.filter(matchesQuery);
-  const watchlistFollowed = gurus.filter((g) => g.followed);
-  const watchlistGurus = watchlistFollowed.filter(matchesQuery);
+  const browseAnalysts = analysts.filter(matchesQuery);
+  const watchlistFollowed = analysts.filter((g) => g.followed);
+  const watchlistAnalysts = watchlistFollowed.filter(matchesQuery);
 
-  const selectedGuru = gurusRaw.find((g) => g.id === s.selectedGuruId) || gurusRaw[0];
-  let profileClaims = claimsRaw.filter((c) => c.guruId === selectedGuru.id);
+  const selectedAnalyst = analystsRaw.find((g) => g.id === s.selectedAnalystId) || analystsRaw[0];
+  let profileClaims = claimsRaw.filter((c) => c.analystId === selectedAnalyst.id);
   if (s.claimFilter === 'open') profileClaims = profileClaims.filter((c) => c.status === 'open');
   if (s.claimFilter === 'resolved') profileClaims = profileClaims.filter((c) => c.status === 'resolved');
 
   const sparkColors = { good: '#4fbf7a', mid: '#e3a63a', bad: '#e0616b' };
-  const sparkColor = selectedGuru.score >= 70 ? sparkColors.good : selectedGuru.score >= 50 ? sparkColors.mid : sparkColors.bad;
-  const sparkPointsByGuru = {
+  const sparkColor = selectedAnalyst.score >= 70 ? sparkColors.good : selectedAnalyst.score >= 50 ? sparkColors.mid : sparkColors.bad;
+  const sparkPointsByAnalyst = {
     'macro-chartist': '0,20 20,17 40,19 60,12 80,14 100,7 120,5',
     'crypto-compass': '0,10 20,14 40,11 60,20 80,22 100,18 120,21',
     'value-vane': '0,22 20,18 40,15 60,14 80,10 100,8 120,4',
@@ -287,14 +287,14 @@ function computeVals() {
   };
 
   const profile = {
-    ...selectedGuru,
-    scoreColor: scoreColor(selectedGuru.score),
-    sourceLabel: selectedGuru.primarySource === 'video' ? 'Video-focused' : 'Blog-focused',
-    claimsSummary: selectedGuru.claims + ' claims · ' + selectedGuru.resolved + ' resolved · ' + selectedGuru.open + ' open',
-    categories: selectedGuru.categories.map((c) => ({ ...c, barWidth: c.pct + '%' })),
-    sparkPoints: sparkPointsByGuru[selectedGuru.id] || sparkPointsByGuru['macro-chartist'],
+    ...selectedAnalyst,
+    scoreColor: scoreColor(selectedAnalyst.score),
+    sourceLabel: selectedAnalyst.primarySource === 'video' ? 'Video-focused' : 'Blog-focused',
+    claimsSummary: selectedAnalyst.claims + ' claims · ' + selectedAnalyst.resolved + ' resolved · ' + selectedAnalyst.open + ' open',
+    categories: selectedAnalyst.categories.map((c) => ({ ...c, barWidth: c.pct + '%' })),
+    sparkPoints: sparkPointsByAnalyst[selectedAnalyst.id] || sparkPointsByAnalyst['macro-chartist'],
     sparkColor,
-    sparkDelta: selectedGuru.score >= 70 ? '+4 vs. prior period' : selectedGuru.score >= 50 ? '−1 vs. prior period' : '−7 vs. prior period',
+    sparkDelta: selectedAnalyst.score >= 70 ? '+4 vs. prior period' : selectedAnalyst.score >= 50 ? '−1 vs. prior period' : '−7 vs. prior period',
     emptyFilter: profileClaims.length === 0,
     claims: profileClaims.map((c) => {
       const hz = horizonStyle(c.horizon);
@@ -333,8 +333,8 @@ function computeVals() {
 
   const addTargetNew = s.addTarget === 'new';
   const addTargetExisting = s.addTarget === 'existing';
-  const addGuruContext = gurusRaw.find((g) => g.id === s.addGuruId);
-  const detectedExpert = gurus.find((g) => g.id === s.addGuruId) || null;
+  const addAnalystContext = analystsRaw.find((g) => g.id === s.addAnalystId);
+  const detectedExpert = analysts.find((g) => g.id === s.addAnalystId) || null;
 
   const autoOrder = ['link', 'detect', 'processing', 'review', 'done'];
   const directOrder = ['details', 'processing', 'review', 'done'];
@@ -353,11 +353,11 @@ function computeVals() {
   const selectedDraftCount = draftClaims.filter((d) => d.checked).length;
 
   return {
-    statLine: gurusRaw.length + ' experts · ' + totalClaims + ' claims tracked',
-    gurus, browseGurus, watchlistGurus,
-    browseNoMatches: browseGurus.length === 0,
+    statLine: analystsRaw.length + ' experts · ' + totalClaims + ' claims tracked',
+    analysts, browseAnalysts, watchlistAnalysts,
+    browseNoMatches: browseAnalysts.length === 0,
     watchlistEmpty: watchlistFollowed.length === 0,
-    watchlistNoMatches: watchlistFollowed.length > 0 && watchlistGurus.length === 0,
+    watchlistNoMatches: watchlistFollowed.length > 0 && watchlistAnalysts.length === 0,
     backToListLabel: s.listScreen === 'browse' ? 'Browse all experts' : 'Watchlist',
     profile,
     claimDetail,
@@ -366,17 +366,17 @@ function computeVals() {
     addTotalSteps: String(totalSteps),
     addDot: Array.from({ length: totalSteps }, (_, i) => (phaseIndex >= i + 1 ? 'var(--accent)' : 'var(--border)')),
     flowLabel: s.addMode === 'auto' ? 'Add a link' : 'Add a video or post',
-    addTargetNew, addTargetExisting, addGuruContext, detectedExpert,
+    addTargetNew, addTargetExisting, addAnalystContext, detectedExpert,
     detectTitle: addTargetExisting ? 'We recognized this source' : 'New expert details',
     detectSourceTypeLabel: s.addSourceType === 'video' ? 'Video' : 'Blog',
-    detailsTitle: 'Add to ' + (addGuruContext ? addGuruContext.name : ''),
+    detailsTitle: 'Add to ' + (addAnalystContext ? addAnalystContext.name : ''),
     urlLabel: s.addSourceType === 'video' ? 'YouTube video URL' : 'Blog post URL',
     urlPlaceholder: s.addSourceType === 'video' ? 'https://youtube.com/watch?v=...' : 'https://example.com/blog/post',
     detailsContinueDisabled, detectContinueDisabled,
     linkContinueDisabled: !s.addUrl,
     showProcessingIntro: s.addMode === 'auto',
     processingIntro: addTargetExisting
-      ? 'Matched to ' + (addGuruContext ? addGuruContext.name : '')
+      ? 'Matched to ' + (addAnalystContext ? addAnalystContext.name : '')
       : 'Registered ' + (s.addName || 'this expert') + ' as new',
     draftClaims, selectedDraftCount,
     confirmLabel: 'Save ' + selectedDraftCount + (selectedDraftCount === 1 ? ' claim' : ' claims'),
@@ -415,9 +415,9 @@ function sidebarHtml(vals) {
   </div>`;
 }
 
-function guruCard(g) {
+function analystCard(g) {
   return `
-  <div class="gl-card" data-act="selectGuru" data-id="${g.id}" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;cursor:pointer;display:flex;flex-direction:column;gap:14px;transition:background .12s, border-color .12s;">
+  <div class="gl-card" data-act="selectAnalyst" data-id="${g.id}" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;cursor:pointer;display:flex;flex-direction:column;gap:14px;transition:background .12s, border-color .12s;">
     <div style="display:flex;align-items:center;gap:12px;">
       <div class="gl-mono" style="width:38px;height:38px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;color:var(--accent);flex-shrink:0;">${g.initials}</div>
       <div style="flex:1;min-width:0;">
@@ -465,7 +465,7 @@ function renderWatchlist(vals) {
     </div>` : ''}
     ${vals.watchlistNoMatches ? `<div style="padding:48px;text-align:center;color:var(--text-muted);font-size:13.5px;border:1px dashed var(--border);border-radius:10px;">No experts in your watchlist match &ldquo;${escapeHtml(state.searchQuery)}&rdquo;.</div>` : ''}
     <div style="display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:18px;">
-      ${vals.watchlistGurus.map(guruCard).join('')}
+      ${vals.watchlistAnalysts.map(analystCard).join('')}
     </div>
   </div>`;
 }
@@ -489,7 +489,7 @@ function renderBrowse(vals) {
     </div>
     ${vals.browseNoMatches ? `<div style="padding:48px;text-align:center;color:var(--text-muted);font-size:13.5px;border:1px dashed var(--border);border-radius:10px;">No experts match &ldquo;${escapeHtml(state.searchQuery)}&rdquo;.</div>` : ''}
     <div style="display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:18px;">
-      ${vals.browseGurus.map(guruCard).join('')}
+      ${vals.browseAnalysts.map(analystCard).join('')}
     </div>
   </div>`;
 }
@@ -521,7 +521,7 @@ function renderProfile(vals) {
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
         ${vals.backToListLabel}
       </button>
-      <button data-act="addToGuru" data-id="${p.id}" style="display:flex;align-items:center;gap:8px;background:none;border:1px solid var(--border);color:var(--text);border-radius:7px;padding:9px 14px;font-size:12.5px;font-weight:600;">
+      <button data-act="addToAnalyst" data-id="${p.id}" style="display:flex;align-items:center;gap:8px;background:none;border:1px solid var(--border);color:var(--text);border-radius:7px;padding:9px 14px;font-size:12.5px;font-weight:600;">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
         Add a video or post
       </button>
@@ -573,7 +573,7 @@ function renderClaim(vals) {
   <div style="padding:36px 48px 64px;max-width:960px;">
     <button data-act="backFromClaim" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--text-muted);font-size:13px;padding:0;margin-bottom:22px;">
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
-      ${cd.guruName}
+      ${cd.analystName}
     </button>
     <div style="margin-bottom:26px;">
       <div style="font-size:23px;font-weight:600;">${cd.asset}</div>

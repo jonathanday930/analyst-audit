@@ -4,7 +4,7 @@ export type Verdict = 'good' | 'bad' | null
 export type Horizon = 'short' | 'swing' | 'long'
 
 export interface Category { label: string; score?: number; pct?: number }
-export interface Guru {
+export interface Analyst {
   id: string
   name: string
   initials?: string
@@ -45,9 +45,9 @@ export interface Claim {
   id: string
   source_id?: string
   extraction_status?: 'pending' | 'complete' | 'failed'
-  guru_id?: string
-  guru?: { id: string; name: string }
-  guru_name?: string
+  analyst_id?: string
+  analyst?: { id: string; name: string }
+  analyst_name?: string
   source?: Source
   asset_description?: string
   asset?: string
@@ -74,10 +74,10 @@ export interface Claim {
 }
 
 export interface LinkResponse {
-  status: 'requires_guru_name' | 'matched' | 'pending' | 'review_ready' | 'created'
+  status: 'requires_analyst_name' | 'matched' | 'pending' | 'review_ready' | 'created'
   source_type?: SourceType
-  matched_guru?: Guru | null
-  guru?: Guru
+  matched_analyst?: Analyst | null
+  analyst?: Analyst
   source_id?: string
   claims?: Claim[]
   draft_claims?: Claim[]

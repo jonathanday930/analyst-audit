@@ -8,11 +8,11 @@ class WireModel(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
-class GuruCreate(WireModel):
+class AnalystCreate(WireModel):
     name: str = Field(min_length=1, max_length=200)
 
 
-class GuruSummary(WireModel):
+class AnalystSummary(WireModel):
     id: str
     name: str
     followed: bool
@@ -24,7 +24,7 @@ class GuruSummary(WireModel):
     reliability_score: float | None = None
 
 
-class GuruDetail(GuruSummary):
+class AnalystDetail(AnalystSummary):
     sources: list["SourceSummary"] = Field(default_factory=list)
     claims: list["ClaimOut"] = Field(default_factory=list)
 
@@ -52,7 +52,7 @@ class EvaluationOut(WireModel):
 class ClaimOut(WireModel):
     id: str
     source_id: str
-    guru_id: str
+    analyst_id: str
     extraction_status: Literal["pending", "complete", "failed"]
     asset_description: str | None
     suggested_ticker: str | None
@@ -68,13 +68,13 @@ class ClaimOut(WireModel):
     status: Literal["open", "resolved", "expired"]
     evaluations: list[EvaluationOut] = Field(default_factory=list)
     source: SourceSummary
-    guru: "GuruRef"
+    analyst: "AnalystRef"
     latest_verdict: Literal["good", "bad", "ambiguous"] | None = None
     verdict: Literal["good", "bad", "ambiguous"] | None = None
     resolution: "ResolutionOut | None" = None
 
 
-class GuruRef(WireModel):
+class AnalystRef(WireModel):
     id: str
     name: str
 
@@ -88,16 +88,16 @@ class ResolutionOut(WireModel):
 
 class LinkCreate(WireModel):
     url: HttpUrl
-    guru_id: str | None = None
-    guru_name: str | None = Field(default=None, min_length=1, max_length=200)
+    analyst_id: str | None = None
+    analyst_name: str | None = Field(default=None, min_length=1, max_length=200)
     force_new: bool = False
 
 
 class LinkResponse(WireModel):
-    status: Literal["requires_guru_name", "matched", "pending", "review_ready", "created"]
+    status: Literal["requires_analyst_name", "matched", "pending", "review_ready", "created"]
     source_type: Literal["video", "blog"]
-    matched_guru: GuruSummary | None = None
-    guru: GuruSummary | None = None
+    matched_analyst: AnalystSummary | None = None
+    analyst: AnalystSummary | None = None
     source_id: str | None = None
     claims: list[ClaimOut] = Field(default_factory=list)
     draft_claims: list[ClaimOut] = Field(default_factory=list)

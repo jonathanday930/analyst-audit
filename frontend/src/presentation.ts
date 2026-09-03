@@ -1,10 +1,10 @@
-import type { Claim, Guru } from './types'
+import type { Claim, Analyst } from './types'
 
-export const score = (guru: Guru): number | null => guru.reliability_score ?? guru.score ?? null
-export const initials = (guru: Guru): string => guru.initials ?? guru.name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()
-export const claimCount = (guru: Guru): number => guru.claim_count ?? (typeof guru.claims === 'number' ? guru.claims : guru.claims?.length) ?? 0
-export const resolvedCount = (guru: Guru): number => guru.resolved_count ?? guru.resolved ?? 0
-export const openCount = (guru: Guru): number => guru.open_count ?? guru.open ?? 0
+export const score = (analyst: Analyst): number | null => analyst.reliability_score ?? analyst.score ?? null
+export const initials = (analyst: Analyst): string => analyst.initials ?? analyst.name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+export const claimCount = (analyst: Analyst): number => analyst.claim_count ?? (typeof analyst.claims === 'number' ? analyst.claims : analyst.claims?.length) ?? 0
+export const resolvedCount = (analyst: Analyst): number => analyst.resolved_count ?? analyst.resolved ?? 0
+export const openCount = (analyst: Analyst): number => analyst.open_count ?? analyst.open ?? 0
 export const asset = (claim: Claim): string => claim.asset_description ?? claim.asset ?? 'Pending claim'
 export const ticker = (claim: Claim): string => claim.suggested_ticker ?? claim.ticker ?? '—'
 export const outcome = (claim: Claim): string => claim.expected_outcome ?? claim.outcome ?? claim.pending_message ?? 'Claim extraction pending'

@@ -12,7 +12,7 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     op.create_table(
-        "gurus",
+        "analysts",
         sa.Column("id", sa.String(36), primary_key=True),
         sa.Column("name", sa.String(200), nullable=False, unique=True),
         sa.Column("followed", sa.Boolean(), nullable=False),
@@ -22,7 +22,7 @@ def upgrade() -> None:
     op.create_table(
         "sources",
         sa.Column("id", sa.String(36), primary_key=True),
-        sa.Column("guru_id", sa.String(36), sa.ForeignKey("gurus.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("analyst_id", sa.String(36), sa.ForeignKey("analysts.id", ondelete="CASCADE"), nullable=False),
         sa.Column("type", sa.String(20), nullable=False),
         sa.Column("url", sa.Text(), nullable=False),
         sa.Column("canonical_url", sa.Text(), nullable=False),
@@ -40,14 +40,14 @@ def upgrade() -> None:
         sa.CheckConstraint("ingestion_status IN ('ready', 'failed')", name="ck_sources_ingestion_status"),
         sa.UniqueConstraint("type", "source_key", name="uq_sources_type_source_key"),
     )
-    op.create_index("ix_sources_guru_id", "sources", ["guru_id"])
+    op.create_index("ix_sources_analyst_id", "sources", ["analyst_id"])
     op.create_index("ix_sources_youtube_channel_id", "sources", ["youtube_channel_id"])
     op.create_index("ix_sources_blog_domain", "sources", ["blog_domain"])
     op.create_table(
         "claims",
         sa.Column("id", sa.String(36), primary_key=True),
         sa.Column("source_id", sa.String(36), sa.ForeignKey("sources.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("guru_id", sa.String(36), sa.ForeignKey("gurus.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("analyst_id", sa.String(36), sa.ForeignKey("analysts.id", ondelete="CASCADE"), nullable=False),
         sa.Column("extraction_status", sa.String(20), nullable=False),
         sa.Column("asset_description", sa.Text()), sa.Column("suggested_ticker", sa.String(30)),
         sa.Column("condition_trigger", sa.Text()), sa.Column("expected_outcome", sa.Text()),
@@ -62,7 +62,7 @@ def upgrade() -> None:
         sa.CheckConstraint("horizon IN ('short-term', 'swing', 'long-term', 'structural') OR horizon IS NULL", name="ck_claims_horizon"),
         sa.CheckConstraint("target_window_end IS NULL OR target_window_start IS NULL OR target_window_end >= target_window_start", name="ck_claims_target_window_order"),
     )
-    op.create_index("ix_claims_guru_status", "claims", ["guru_id", "status"])
+    op.create_index("ix_claims_analyst_status", "claims", ["analyst_id", "status"])
     op.create_index("ix_claims_target_window_end", "claims", ["target_window_end"])
     op.create_index("ix_claims_trigger_deadline", "claims", ["trigger_deadline"])
     op.create_table(
@@ -80,4 +80,4 @@ def downgrade() -> None:
     op.drop_table("claim_evaluations")
     op.drop_table("claims")
     op.drop_table("sources")
-    op.drop_table("gurus")
+    op.drop_table("analysts")

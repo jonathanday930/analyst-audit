@@ -4,11 +4,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db import crud
-from app.db.models import Guru
+from app.db.models import Analyst
 from app.db.session import get_db
 from app.jobs.claim_finder import run_claim_finder
-from app.matching import match_guru
-from app.presenters import claim_out, guru_summary
+from app.matching import match_analyst
+from app.presenters import claim_out, analyst_summary
 from app.schemas import LinkCreate, LinkResponse
 from app.sources import SourceFetchError, fetch_source
 
@@ -24,41 +24,41 @@ def add_link(payload: LinkCreate, db: Session = Depends(get_db)) -> LinkResponse
 
     existing = crud.find_source(db, source_type=fetched.type, source_key=fetched.source_key)
     if existing:
-        existing_guru = db.get(Guru, existing.guru_id)
+        existing_analyst = db.get(Analyst, existing.analyst_id)
         claim = existing.claims[0] if existing.claims else None
         return LinkResponse(
             status="pending",
             source_type=existing.type,
-            matched_guru=guru_summary(existing_guru),
-            guru=guru_summary(existing_guru),
+            matched_analyst=analyst_summary(existing_analyst),
+            analyst=analyst_summary(existing_analyst),
             source_id=existing.id,
             claims=[claim_out(claim)] if claim else [],
             message="Claim extraction pending" if claim and claim.extraction_status == "pending" else None,
         )
 
-    if payload.guru_id:
-        guru = db.get(Guru, payload.guru_id)
-        if not guru:
-            raise HTTPException(status_code=404, detail="Guru not found.")
-    elif payload.guru_name:
-        normalized_name = payload.guru_name.strip()
-        guru = db.scalar(select(Guru).where(Guru.name == normalized_name))
-        if guru is None:
-            guru = crud.create_guru(db, name=normalized_name)
+    if payload.analyst_id:
+        analyst = db.get(Analyst, payload.analyst_id)
+        if not analyst:
+            raise HTTPException(status_code=404, detail="Analyst not found.")
+    elif payload.analyst_name:
+        normalized_name = payload.analyst_name.strip()
+        analyst = db.scalar(select(Analyst).where(Analyst.name == normalized_name))
+        if analyst is None:
+            analyst = crud.create_analyst(db, name=normalized_name)
     else:
-        guru = None if payload.force_new else match_guru(db, fetched)
-        if guru is None:
-            return LinkResponse(status="requires_guru_name", source_type=fetched.type)
+        analyst = None if payload.force_new else match_analyst(db, fetched)
+        if analyst is None:
+            return LinkResponse(status="requires_analyst_name", source_type=fetched.type)
         return LinkResponse(
             status="matched",
             source_type=fetched.type,
-            matched_guru=guru_summary(guru),
+            matched_analyst=analyst_summary(analyst),
         )
 
     try:
         source, claim = crud.create_source_with_placeholder(
             db,
-            guru=guru,
+            analyst=analyst,
             source_type=fetched.type,
             url=fetched.original_url,
             canonical_url=fetched.canonical_url,
@@ -73,15 +73,15 @@ def add_link(payload: LinkCreate, db: Session = Depends(get_db)) -> LinkResponse
         db.commit()
     except IntegrityError as exc:
         db.rollback()
-        raise HTTPException(status_code=409, detail="This source or guru already exists.") from exc
+        raise HTTPException(status_code=409, detail="This source or analyst already exists.") from exc
 
     # Deliberately a seam only; this function is a no-op until the separately-owned finder lands.
     run_claim_finder(source.id)
     return LinkResponse(
         status="pending",
         source_type=source.type,
-        matched_guru=guru_summary(guru),
-        guru=guru_summary(guru),
+        matched_analyst=analyst_summary(analyst),
+        analyst=analyst_summary(analyst),
         source_id=source.id,
         claims=[claim_out(claim)],
         message="Claim extraction pending",

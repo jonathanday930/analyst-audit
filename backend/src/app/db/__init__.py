@@ -1,3 +1,3 @@
-from app.db.models import Base, Claim, ClaimEvaluation, Guru, Source
+from app.db.models import Base, Claim, ClaimEvaluation, Analyst, Source
 
-__all__ = ["Base", "Claim", "ClaimEvaluation", "Guru", "Source"]
+__all__ = ["Base", "Claim", "ClaimEvaluation", "Analyst", "Source"]

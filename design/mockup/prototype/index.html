@@ -57,8 +57,6 @@ const state = {
   addName: '',
   addSourceType: 'video',
   addUrl: '',
-  addTrackingUrl: '',
-  addTrackingSkipped: false,
   addSelected: {},
   addSavedCount: 0,
 };
@@ -91,6 +89,7 @@ function getClaims() {
     { id: 'c11', guruId: 'oilpatch-ollie', asset: 'Natural Gas', ticker: 'NG=F', condition: 'If winter demand spikes', conditionType: 'EVENT TRIGGER', outcome: 'Prices double', horizon: 'short', timeframeText: '"within the cold snap"', windowText: 'Trigger not yet met', status: 'open', verdict: null, rationale: null, sourceTitle: 'Winter Setup', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=wintersetup-demo', claimDate: 'Aug 25, 2026', guruName: 'OilPatch Ollie' },
     { id: 'c12', guruId: 'swing-sensei', asset: 'Semiconductors', ticker: 'SMH', condition: 'None — unconditional', conditionType: 'UNCONDITIONAL', outcome: 'Next leg up on AI capex', horizon: 'swing', timeframeText: '"next couple months"', windowText: 'Jul 1 – Sep 15, 2026', status: 'resolved', verdict: 'good', rationale: 'SMH rose from $238 to $271 (+13.9%) over the window — the call paid off.', evaluatedDate: 'Sep 16, 2026', tradeReturnValue: 13.9, tradeReturnLabel: '+13.9%', benchmarks: [{ label: 'S&P 500', ticker: 'SPY', value: 4.8, display: '+4.8%' }, { label: 'Nasdaq', ticker: 'QQQ', value: 6.1, display: '+6.1%' }], sourceTitle: 'AI Capex Isn’t Slowing', sourceType: 'blog', sourceUrl: 'https://exampleblog.com/ai-capex-isnt-slowing', claimDate: 'Jul 1, 2026', guruName: 'SwingSensei' },
     { id: 'c13', guruId: 'swing-sensei', asset: 'Regional Banks', ticker: 'KRE', condition: 'If credit conditions worsen', conditionType: 'EVENT TRIGGER', outcome: 'Another leg down', horizon: 'short', timeframeText: '"in the following weeks"', windowText: 'Trigger not yet met', status: 'open', verdict: null, rationale: null, sourceTitle: 'Credit Cracks', sourceType: 'blog', sourceUrl: 'https://exampleblog.com/credit-cracks', claimDate: 'Aug 18, 2026', guruName: 'SwingSensei' },
+    { id: 'c14', guruId: 'oilpatch-ollie', asset: 'Natural Gas', ticker: 'NG=F', condition: 'If a major pipeline outage hits the Gulf Coast', conditionType: 'EVENT TRIGGER', outcome: 'Prices spike above $6/MMBtu', horizon: 'short', timeframeText: '"within weeks of any outage"', windowText: 'Trigger deadline passed — condition never triggered', status: 'expired', verdict: null, rationale: null, sourceTitle: 'Gulf Coast Risk Watch', sourceType: 'video', sourceUrl: 'https://youtube.com/watch?v=gulfrisk-demo', claimDate: 'Jul 10, 2025', guruName: 'OilPatch Ollie' },
   ];
 }
 
@@ -119,6 +118,7 @@ function horizonStyle(h) {
   return { label: 'SWING', bg: 'var(--accent-soft)', color: 'var(--accent)' };
 }
 function statusStyle(claim) {
+  if (claim.status === 'expired') return { label: 'EXPIRED', color: 'var(--text-faint)', bg: 'rgba(91,101,114,0.12)' };
   if (claim.status === 'open') return { label: 'OPEN', color: 'var(--pending)', bg: 'var(--pending-soft)' };
   if (claim.verdict === 'good') return { label: 'GOOD CALL', color: 'var(--good)', bg: 'var(--good-soft)' };
   return { label: 'BAD CALL', color: 'var(--bad)', bg: 'var(--bad-soft)' };
@@ -167,14 +167,14 @@ function goAddLink() {
   setState({
     screen: 'add', addMode: 'auto', addPhase: 'link', addTarget: null, addGuruId: null,
     addDetectedGuruId: null, addName: '', addSourceType: 'video', addUrl: '',
-    addTrackingUrl: '', addTrackingSkipped: false, addSelected: {},
+    addSelected: {},
   });
 }
 function goAddToGuru(guruId) {
   setState({
     screen: 'add', addMode: 'direct', addPhase: 'details', addTarget: 'existing', addGuruId: guruId,
     addName: '', addSourceType: 'video', addUrl: '',
-    addTrackingUrl: '', addTrackingSkipped: false, addSelected: {},
+    addSelected: {},
   });
 }
 function toggleFollow(id) {
@@ -224,12 +224,7 @@ function handleAction(act, id) {
     case 'runDetection': runDetection(); break;
     case 'useDifferentExpert': setState({ addTarget: 'new', addGuruId: null, addDetectedGuruId: null }); break;
     case 'backToLink': setState({ addPhase: 'link' }); break;
-    case 'continueFromDetect':
-      setState({ addPhase: state.addTarget === 'new' ? 'trackingSetup' : 'processing' });
-      break;
-    case 'backFromTracking': setState({ addPhase: 'detect' }); break;
-    case 'skipTracking': setState({ addTrackingSkipped: true, addPhase: 'processing' }); break;
-    case 'continueFromTracking': setState({ addTrackingSkipped: false, addPhase: 'processing' }); break;
+    case 'continueFromDetect': setState({ addPhase: 'processing' }); break;
     case 'setSourceVideo': setState({ addSourceType: 'video' }); break;
     case 'setSourceBlog': setState({ addSourceType: 'blog' }); break;
     case 'backFromDetails': setState({ screen: 'profile', selectedGuruId: state.addGuruId }); break;
@@ -319,9 +314,13 @@ function computeVals() {
     sourceDisplay: '"' + selectedClaim.sourceTitle + '" — ' + (selectedClaim.sourceType === 'video' ? 'video' : 'blog post'),
     showRationale: selectedClaim.status === 'resolved',
     showOpenNote: selectedClaim.status === 'open',
-    openNote: selectedClaim.windowText.indexOf('Open-ended') === 0 || selectedClaim.windowText.indexOf('no fixed') !== -1 || selectedClaim.windowText.indexOf('Trigger not yet met') !== -1 || selectedClaim.windowText.indexOf('Event-based') === 0
+    openNote: selectedClaim.windowText.indexOf('Open-ended') === 0 || selectedClaim.windowText.indexOf('no fixed') !== -1
       ? 'No fixed target date — claim analyzer rechecks this periodically rather than resolving it once.'
-      : 'Target window has not arrived yet — claim analyzer will resolve this once it does.',
+      : selectedClaim.windowText.indexOf('Trigger not yet met') !== -1 || selectedClaim.windowText.indexOf('Event-based') === 0
+        ? 'Condition hasn’t triggered yet — claim analyzer keeps checking until the trigger deadline passes. If it never triggers in time, the claim expires without being scored.'
+        : 'Target window has not arrived yet — claim analyzer will resolve this once it does.',
+    showExpiredNote: selectedClaim.status === 'expired',
+    expiredNote: 'The stated condition never triggered before its deadline — this claim expired unevaluated and isn’t counted as good or bad.',
     showBenchmark: hasBenchmarks,
     tradeReturnColor: hasBenchmarks && selectedClaim.tradeReturnValue >= 0 ? 'var(--good)' : 'var(--bad)',
     benchmarkRows: hasBenchmarks
@@ -337,16 +336,14 @@ function computeVals() {
   const addGuruContext = gurusRaw.find((g) => g.id === s.addGuruId);
   const detectedExpert = gurus.find((g) => g.id === s.addGuruId) || null;
 
-  const autoOrderMatched = ['link', 'detect', 'processing', 'review', 'done'];
-  const autoOrderNew = ['link', 'detect', 'trackingSetup', 'processing', 'review', 'done'];
+  const autoOrder = ['link', 'detect', 'processing', 'review', 'done'];
   const directOrder = ['details', 'processing', 'review', 'done'];
-  const phaseOrder = s.addMode === 'auto' ? (addTargetNew ? autoOrderNew : autoOrderMatched) : directOrder;
+  const phaseOrder = s.addMode === 'auto' ? autoOrder : directOrder;
   const phaseIndex = phaseOrder.indexOf(s.addPhase) + 1;
   const totalSteps = phaseOrder.length;
 
   const detailsContinueDisabled = !s.addUrl;
   const detectContinueDisabled = addTargetNew && s.addName.trim().length === 0;
-  const trackingContinueDisabled = !s.addTrackingUrl;
 
   const draftClaims = draftRaw.map((d) => {
     const hzd = horizonStyle(d.horizon);
@@ -375,23 +372,16 @@ function computeVals() {
     detailsTitle: 'Add to ' + (addGuruContext ? addGuruContext.name : ''),
     urlLabel: s.addSourceType === 'video' ? 'YouTube video URL' : 'Blog post URL',
     urlPlaceholder: s.addSourceType === 'video' ? 'https://youtube.com/watch?v=...' : 'https://example.com/blog/post',
-    detailsContinueDisabled, detectContinueDisabled, trackingContinueDisabled,
+    detailsContinueDisabled, detectContinueDisabled,
     linkContinueDisabled: !s.addUrl,
     showProcessingIntro: s.addMode === 'auto',
     processingIntro: addTargetExisting
       ? 'Matched to ' + (addGuruContext ? addGuruContext.name : '')
-      : s.addTrackingUrl
-        ? 'Registered ' + (s.addName || 'this expert') + ' with tracking enabled'
-        : 'Registered ' + (s.addName || 'this expert') + ' as new',
+      : 'Registered ' + (s.addName || 'this expert') + ' as new',
     draftClaims, selectedDraftCount,
     confirmLabel: 'Save ' + selectedDraftCount + (selectedDraftCount === 1 ? ' claim' : ' claims'),
     doneBackLabel: addTargetExisting ? 'Back to profile' : 'Back to Watchlist',
     doneAgainLabel: addTargetExisting ? 'Add another video/post' : 'Add another link',
-    doneTrackingNote: addTargetNew
-      ? (s.addTrackingUrl
-          ? (s.addName || 'This expert') + ' will be tracked automatically going forward.'
-          : 'Tracking isn’t set up yet — add ' + (s.addName || 'their') + ' channel or feed URL anytime from their profile to enable it.')
-      : null,
   };
 }
 
@@ -634,6 +624,7 @@ function renderClaim(vals) {
         <div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Rationale</div>
         <div style="font-size:13.5px;color:var(--text);line-height:1.6;">${cd.rationale}</div>` : ''}
         ${cd.showOpenNote ? `<div style="font-size:13px;color:var(--text-muted);line-height:1.55;">${cd.openNote}</div>` : ''}
+        ${cd.showExpiredNote ? `<div style="font-size:13px;color:var(--text-muted);line-height:1.55;">${cd.expiredNote}</div>` : ''}
         ${cd.showBenchmark ? `
         <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border);">
           <div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;">Benchmark comparison</div>
@@ -702,17 +693,6 @@ function renderAdd(vals) {
         <button data-act="backToLink" style="padding:11px 18px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-muted);font-size:13px;">Back</button>
         <button data-act="continueFromDetect" ${vals.detectContinueDisabled ? 'disabled' : ''} style="${vals.detectContinueDisabled ? disabledBtn : enabledBtn}">Continue</button>
       </div>`;
-  } else if (state.addPhase === 'trackingSetup') {
-    phaseHtml = `
-      <div style="font-size:20px;font-weight:600;margin-bottom:8px;">Keep ${escapeHtml(state.addName || 'this expert')} tracked automatically</div>
-      <div style="font-size:13px;color:var(--text-muted);margin-bottom:24px;line-height:1.5;">Add their YouTube channel or blog RSS/feed URL so claim finder can keep checking their new content on its own. You can skip this and add it later from their profile.</div>
-      <label style="font-size:12px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;">Channel or feed URL (optional)</label>
-      <input id="add-tracking-input" type="text" value="${escapeAttr(state.addTrackingUrl)}" data-bind="addTrackingUrl" placeholder="https://youtube.com/@channel or an RSS/feed URL" style="width:100%;margin:8px 0 24px;padding:11px 13px;border-radius:7px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:13.5px;" />
-      <div style="display:flex;gap:10px;">
-        <button data-act="backFromTracking" style="padding:11px 18px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-muted);font-size:13px;">Back</button>
-        <button data-act="skipTracking" style="padding:11px 18px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-muted);font-size:13px;">Skip for now</button>
-        <button data-act="continueFromTracking" ${vals.trackingContinueDisabled ? 'disabled' : ''} style="${vals.trackingContinueDisabled ? disabledBtn : enabledBtn}">Continue</button>
-      </div>`;
   } else if (state.addPhase === 'details') {
     phaseHtml = `
       <div style="font-size:20px;font-weight:600;margin-bottom:20px;">${vals.detailsTitle}</div>
@@ -777,8 +757,7 @@ function renderAdd(vals) {
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--good)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg>
         </div>
         <div style="font-size:19px;font-weight:600;margin-bottom:8px;">${state.addSavedCount} claims added</div>
-        <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:${vals.doneTrackingNote ? '10px' : '26px'};">Claim analyzer will start checking these against their target windows automatically.</div>
-        ${vals.doneTrackingNote ? `<div style="font-size:13px;color:var(--text-faint);margin-bottom:26px;">${vals.doneTrackingNote}</div>` : ''}
+        <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:26px;">Claim analyzer will start checking these against their target windows automatically.</div>
         <div style="display:flex;gap:10px;justify-content:center;">
           <button data-act="doneBack" style="padding:11px 18px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text);font-size:13px;">${vals.doneBackLabel}</button>
           <button data-act="doneAgain" style="background:var(--accent);color:#1a1305;border:none;border-radius:7px;padding:11px 18px;font-size:13px;font-weight:600;">${vals.doneAgainLabel}</button>

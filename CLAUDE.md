@@ -46,27 +46,23 @@ A fourth stage — combining several trusted gurus' currently-open claims into a
 buy/sell make sense right now" read — was discussed and explicitly deferred. Once 1-3 exist,
 it's expected to be a prompt over existing data, not new infrastructure.
 
-### Onboarding a new guru: two-step, channel/feed URL is not required up front
+### Onboarding a new guru: one step, link-only — no separate channel/feed tracking setup
 
-There is no separate "Add analyst" registration flow anymore — the UI has one universal entry
-point, "Add a link": paste any single video or blog post URL, and it tries to match the source
-against gurus already on file (via `detectExpert`/`detectSourceType` in the mockup — a
-placeholder substring match, not the real matching algorithm the backend needs). If it matches,
-the claim(s) get attached to that guru's existing history. If it doesn't match, the flow asks
-for **just a name** to register the guru — deliberately not a channel/feed URL, so a first-time
-add stays a single paste-and-go action.
+There is no separate "Add analyst" registration flow, and no automatic channel/feed tracking for
+MVP — the UI has one universal entry point, "Add a link": paste any single video or blog post
+URL, and it tries to match the source against gurus already on file (via `detectExpert`/
+`detectSourceType` in the mockup — a placeholder substring match; the real algorithm needs to
+match on the pasted link's actual channel ID / blog domain against sources seen on prior claims
+for that guru, not guess from the URL's text). If it matches, the claim(s) get attached to that
+guru's existing history. If it doesn't match, the flow asks for **just a name**, creates a guru
+profile for them automatically, and attaches the claim(s) to it — a single paste-and-go action,
+one screen, no second step.
 
-Registration is still two steps overall, split across two screens: after the name is captured,
-a follow-up screen ("Keep \[name\] tracked automatically") asks for that guru's **YouTube
-channel URL** or **blog RSS/feed URL** — the URL that lets claim finder keep tracking them going
-forward, not just seed one claim. Feed URLs were chosen over scraping the blog's homepage
-because they're a structured, standard mechanism for "here are all my posts" rather than
-something that breaks whenever a site's layout changes. This second screen is skippable ("Skip
-for now") — a guru can exist with no channel/feed URL on file, and the real backend needs a
-`tracking_status` (e.g. `active` / `not_configured`) on the guru record so the profile page can
-show that state and offer to complete it later. Adding a single new post/video to a guru you
-already track (via that guru's own profile page) skips both of these steps and just asks for the
-one specific video/post URL, since there's no re-registration needed there.
+There is deliberately no channel/feed-URL step, no "keep this guru tracked automatically" prompt,
+and nothing to skip. Every claim, for every guru, is seeded by someone manually pasting a video
+or blog link — the claim finder never polls a channel or feed on its own for MVP (see MVP scope
+below). Adding another post/video to a guru you already track (via that guru's own profile page)
+just asks for the one video/post URL, same as the new-guru path minus the name prompt.
 
 ### Evaluation includes a benchmark comparison
 
@@ -92,6 +88,15 @@ marked wrong just because an outcome landed slightly outside a fuzzy self-stated
 source metadata: guru id, source type, source url/id, published date — attached in code, not
 part of the model's reasoning.
 
+Conditional claims (an "if X happens" trigger) need a second deadline, separate from the target
+window above: how long the *condition itself* stays live before the claim goes stale, not just
+how long to wait for the outcome once the condition fires. "If the Fed hikes, stocks crash" made
+today isn't a fair thing to grade if the Fed doesn't hike for another decade — the market context
+that motivated the call is long gone by then. If the guru stated an explicit timeframe for the
+condition, use it as the trigger deadline; otherwise default to a fixed staleness period (e.g. 12
+months from the claim date). A claim whose trigger deadline passes with the condition never
+firing resolves to a distinct **expired** state — moot, not folded into good/bad.
+
 ## MVP scope
 
 - Sources: video transcripts and blog posts only. Twitter/X is explicitly out — tweets are
@@ -109,15 +114,18 @@ part of the model's reasoning.
   per-claim error handling) fits better as backend code than as workflow-tool nodes. n8n could
   be revisited later purely for source-polling triggers (e.g. watching a YouTube channel or
   blog RSS feed for new content) if that becomes painful to hand-roll — not needed for MVP.
+- No automatic channel/feed tracking: every claim is seeded by manually pasting a video or blog
+  link (see onboarding above). The app never polls or watches a guru's channel/feed for new
+  content on its own for MVP.
 
 ## Frontend and data model notes (for building the real app)
 
 The UI/UX is fully designed and approved — implement it, don't redesign it. The canonical
 reference is `design/mockup/prototype/index.html`, a real clickable prototype (plain HTML/CSS/
 vanilla JS, opens in any browser, no login or build step) covering all 5 screens: Watchlist,
-Browse all, Expert profile, Claim detail, and the Add-link flow (including the two-step
-onboarding described above — paste-a-link-and-detect, then an optional, skippable
-channel/feed-URL step). Read `design/README.md` first for how to use it and what's superseded;
+Browse all, Expert profile, Claim detail, and the Add-link flow (a single-step onboarding — paste
+a link, detect or name the guru, done, per the one-step description above). Read
+`design/README.md` first for how to use it and what's superseded;
 `design/mockup/Main.dc.html` is the original source in Claude Design's own templating format —
 don't open it directly in a browser, it won't render (see that README for why).
 
@@ -133,15 +141,20 @@ are display-only strings in the mockup that need to become structured fields in 
   not yet met") needs real `target_window_start`/`target_window_end` dates, nullable for
   open-ended or not-yet-triggered claims — see the fuzzy-window rationale in the claim schema
   section above.
-- `status` (open/resolved) and `verdict` (good/bad, set only once resolved) are separate fields —
-  don't conflate into one enum.
+- Conditional claims need trigger lifecycle fields, per the trigger-deadline rationale in the
+  claim schema section above: `trigger_status` (waiting / triggered / expired),
+  `trigger_observed_at`, and a computed `trigger_deadline` (from the guru's stated condition
+  timeframe, or the default staleness period if none was stated). `status` needs a third value,
+  `expired`, alongside `open`/`resolved`, for claims whose trigger deadline passed unmet.
+- `status` (open/resolved/expired) and `verdict` (good/bad, set only once resolved) are separate
+  fields — don't conflate into one enum.
 - `benchmarks` is optional per claim, only present when there's a comparable return (per
   "Evaluation includes a benchmark comparison" above) — not every claim needs one.
-- The guru record needs the `tracking_status` field (e.g. `active` / `not_configured`) described
-  in the onboarding section above, plus wherever a channel/feed URL is actually stored.
 - The mockup's `detectExpert()` (URL-substring matching against a guru's name/id) is a UI
-  placeholder, not the real matching algorithm — the real version needs to match against actual
-  channel IDs / feed URLs on file, not guess from the pasted URL's text.
+  placeholder, not the real matching algorithm — the real version needs to match the pasted
+  link's actual channel ID / blog domain against the sources already on file for that guru's past
+  claims, not guess from the URL's text (there's no separately stored channel/feed URL to match
+  against — see onboarding above).
 
 This is a genuinely persistent app — unlike `../youtube_fact_checker` (its sibling, deliberately
 stateless), claim history has to survive across the claim analyzer's recurring re-checks, so a
@@ -150,14 +163,19 @@ client pattern, ticker resolution, yfinance price fetching, and YouTube transcri
 fetching from `youtube_fact_checker`'s backend per "What this is" above — don't rebuild those
 from scratch.
 
-**Division of labor**: Codex is building the frontend and the database/persistence layer (real
-schema, CRUD, the screens above wired to real data). The claim finder / claim analyzer / meta
-guru analysis prompts — the actual AI extraction and evaluation logic — are being handled
-separately, iteratively, elsewhere. Codex's backend work should leave clean seams (API
+### Division of labor
+
+General rule across all projects here (see root `AGENTS.md`): Claude handles major/architectural
+decisions, Codex handles grunt work, CRUD, QA, and second opinions. For this project
+specifically, that split means: Codex is building the frontend and the database/persistence
+layer (real schema, CRUD, the screens above wired to real data). The claim finder / claim
+analyzer / meta guru analysis prompts, the actual AI extraction and evaluation logic, are being
+handled separately, iteratively, elsewhere. Codex's backend work should leave clean seams (API
 endpoints, job hooks) for those to plug into rather than building throwaway stand-ins for them,
 but shouldn't attempt to implement the extraction/evaluation prompts itself.
 
 ## Status
 
 UI/UX design is done (see prototype above). Backend, database, and real frontend build have not
-started — this is the next step, split as described in "Division of labor" above.
+started; see `TASKS.md` for the current build-out backlog, split as described in "Division of
+labor" above.

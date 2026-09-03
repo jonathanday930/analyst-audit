@@ -1,0 +1,37 @@
+[project]
+name = "analyst-audit-backend"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.14",
+    "anthropic>=0.68",
+    "fastapi>=0.115",
+    "httpx>=0.28",
+    "psycopg[binary]>=3.2",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "python-dateutil>=2.9",
+    "sqlalchemy>=2.0",
+    "trafilatura>=2.0",
+    "uvicorn[standard]>=0.32",
+    "yfinance>=0.2.50",
+    "youtube-transcript-api>=0.6.3",
+    "yt-dlp>=2024.12.13",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "python-dotenv>=1.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

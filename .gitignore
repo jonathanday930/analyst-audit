@@ -1,1 +1,13 @@
 .DS_Store
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.db
+*.sqlite3
+node_modules/
+dist/
+*.tsbuildinfo
+*.egg-info/
+

@@ -4,7 +4,7 @@ from typing import Any
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.db.models import Claim, ClaimEvaluation, Analyst, Source
+from app.db.models import Claim, ClaimEvaluation, Analyst, Source, Stance
 
 
 def create_analyst(db: Session, *, name: str, followed: bool = True) -> Analyst:
@@ -25,7 +25,11 @@ def get_analyst(db: Session, analyst_id: str) -> Analyst | None:
     return db.scalar(
         select(Analyst)
         .where(Analyst.id == analyst_id)
-        .options(selectinload(Analyst.sources), selectinload(Analyst.claims).selectinload(Claim.evaluations))
+        .options(
+            selectinload(Analyst.sources),
+            selectinload(Analyst.claims).selectinload(Claim.evaluations),
+            selectinload(Analyst.stances).selectinload(Stance.source),
+        )
     )
 
 
@@ -71,6 +75,48 @@ def create_source_with_placeholder(
     db.add_all([source, claim])
     db.flush()
     return source, claim
+
+
+def list_stances(db: Session, *, analyst_id: str | None = None) -> list[Stance]:
+    stmt = select(Stance).options(selectinload(Stance.source)).order_by(Stance.stated_at.desc(), Stance.created_at.desc())
+    if analyst_id:
+        stmt = stmt.where(Stance.analyst_id == analyst_id)
+    return list(db.scalars(stmt).unique())
+
+
+def create_stance(db: Session, *, analyst: Analyst, source: Source, extraction: Any) -> Stance:
+    stance = Stance(
+        analyst=analyst,
+        source=source,
+        kind=extraction.kind,
+        asset_description=extraction.asset_description,
+        suggested_ticker=extraction.suggested_ticker,
+        direction=extraction.direction,
+        sentiment=extraction.sentiment,
+        scope=extraction.scope,
+        supporting_quotes=extraction.supporting_quotes,
+        stated_at=source.published_at,
+    )
+    db.add(stance)
+    db.flush()
+    return stance
+
+
+def replace_source_claims(db: Session, *, source: Source, extractions: list[Any]) -> list[Claim]:
+    for claim in list(source.claims):
+        db.delete(claim)
+    db.flush()
+    claims = [Claim(
+        source=source, analyst_id=source.analyst_id, extraction_status="complete",
+        asset_description=item.asset_description, suggested_ticker=item.suggested_ticker,
+        condition_trigger=item.condition_trigger, claim=item.claim,
+        stated_implication=item.stated_implication, grounds=item.grounds, warrant=item.warrant,
+        backing=item.backing, qualifier=item.qualifier, confidence=item.confidence,
+        rebuttal_invalidation=item.rebuttal_invalidation, horizon=item.horizon, status="open",
+    ) for item in extractions]
+    db.add_all(claims)
+    db.flush()
+    return claims
 
 
 def list_claims(
@@ -120,8 +166,14 @@ def update_claim_resolution(
     benchmark: dict[str, Any] | None = None,
     status: str = "resolved",
     checked_at: datetime | None = None,
+    trigger_status: str | None = None,
+    trigger_observed_at: datetime | None = None,
 ) -> Claim:
     claim.status = status
+    if trigger_status is not None:
+        claim.trigger_status = trigger_status
+    if trigger_observed_at is not None:
+        claim.trigger_observed_at = trigger_observed_at
     evaluation = ClaimEvaluation(
         claim=claim,
         verdict=verdict,

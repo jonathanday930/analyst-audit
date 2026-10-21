@@ -4,7 +4,7 @@ from datetime import date, datetime, timezone
 from typing import Any
 from uuid import uuid4
 
-from sqlalchemy import JSON, Boolean, CheckConstraint, Date, DateTime, ForeignKey, Index, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, CheckConstraint, Date, DateTime, Float, ForeignKey, Index, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -31,6 +31,7 @@ class Analyst(Base):
 
     sources: Mapped[list[Source]] = relationship(back_populates="analyst", cascade="all, delete-orphan")
     claims: Mapped[list[Claim]] = relationship(back_populates="analyst", cascade="all, delete-orphan")
+    stances: Mapped[list[Stance]] = relationship(back_populates="analyst", cascade="all, delete-orphan")
 
 
 class Source(Base):
@@ -62,6 +63,33 @@ class Source(Base):
 
     analyst: Mapped[Analyst] = relationship(back_populates="sources")
     claims: Mapped[list[Claim]] = relationship(back_populates="source", cascade="all, delete-orphan")
+    stances: Mapped[list[Stance]] = relationship(back_populates="source", cascade="all, delete-orphan")
+
+
+class Stance(Base):
+    __tablename__ = "stances"
+    __table_args__ = (
+        CheckConstraint("kind IN ('position', 'sentiment')", name="ck_stances_kind"),
+        CheckConstraint("direction IN ('long', 'short', 'exited') OR direction IS NULL", name="ck_stances_direction"),
+        CheckConstraint("sentiment IN ('bullish', 'neutral', 'bearish', 'uncertain') OR sentiment IS NULL", name="ck_stances_sentiment"),
+        Index("ix_stances_analyst_stated", "analyst_id", "stated_at"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    analyst_id: Mapped[str] = mapped_column(ForeignKey("analysts.id", ondelete="CASCADE"), nullable=False)
+    source_id: Mapped[str] = mapped_column(ForeignKey("sources.id", ondelete="CASCADE"), nullable=False)
+    kind: Mapped[str] = mapped_column(String(20), nullable=False)
+    asset_description: Mapped[str | None] = mapped_column(Text)
+    suggested_ticker: Mapped[str | None] = mapped_column(String(20))
+    direction: Mapped[str | None] = mapped_column(String(20))
+    sentiment: Mapped[str | None] = mapped_column(String(20))
+    scope: Mapped[str | None] = mapped_column(Text)
+    supporting_quotes: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    stated_at: Mapped[date | None] = mapped_column(Date)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
+
+    analyst: Mapped[Analyst] = relationship(back_populates="stances")
+    source: Mapped[Source] = relationship(back_populates="stances")
 
 
 class Claim(Base):
@@ -71,10 +99,7 @@ class Claim(Base):
         CheckConstraint("extraction_status IN ('pending', 'complete', 'failed')", name="ck_claims_extraction_status"),
         CheckConstraint("trigger_status IN ('waiting', 'triggered', 'expired') OR trigger_status IS NULL", name="ck_claims_trigger_status"),
         CheckConstraint("horizon IN ('short-term', 'swing', 'long-term', 'structural') OR horizon IS NULL", name="ck_claims_horizon"),
-        CheckConstraint("target_window_end IS NULL OR target_window_start IS NULL OR target_window_end >= target_window_start", name="ck_claims_target_window_order"),
         Index("ix_claims_analyst_status", "analyst_id", "status"),
-        Index("ix_claims_target_window_end", "target_window_end"),
-        Index("ix_claims_trigger_deadline", "trigger_deadline"),
     )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
@@ -82,16 +107,19 @@ class Claim(Base):
     analyst_id: Mapped[str] = mapped_column(ForeignKey("analysts.id", ondelete="CASCADE"), nullable=False)
     extraction_status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
     asset_description: Mapped[str | None] = mapped_column(Text)
-    suggested_ticker: Mapped[str | None] = mapped_column(String(30))
-    condition_trigger: Mapped[str | None] = mapped_column(Text)
-    expected_outcome: Mapped[str | None] = mapped_column(Text)
+    suggested_ticker: Mapped[list[str] | None] = mapped_column(JSON)
+    condition_trigger: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    claim: Mapped[str | None] = mapped_column(Text)
+    stated_implication: Mapped[str | None] = mapped_column(Text)
+    grounds: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    warrant: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    backing: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    qualifier: Mapped[str | None] = mapped_column(Text)
+    confidence: Mapped[float | None] = mapped_column(Float)
+    rebuttal_invalidation: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     horizon: Mapped[str | None] = mapped_column(String(20))
-    timeframe_as_stated: Mapped[str | None] = mapped_column(Text)
-    target_window_start: Mapped[date | None] = mapped_column(Date)
-    target_window_end: Mapped[date | None] = mapped_column(Date)
     trigger_status: Mapped[str | None] = mapped_column(String(20))
     trigger_observed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    trigger_deadline: Mapped[date | None] = mapped_column(Date)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="open")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow, nullable=False)

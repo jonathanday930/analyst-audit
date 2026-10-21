@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from app.db import crud
 from app.sources.fetcher import FetchedSource
+from app.llm.schemas import AnalystMetaAnalysis, ClaimCategorization
 
 
 def _youtube(channel: str = "UC-one", video: str = "dQw4w9WgXcQ") -> FetchedSource:
@@ -138,3 +139,44 @@ def test_crud_status_check_rejects_invalid_state(db) -> None:
         db.rollback()
     else:
         raise AssertionError("claim status constraint should reject invalid values")
+
+
+def test_analyst_detail_exposes_meta_analysis_and_category_rollup(client, db, monkeypatch) -> None:
+    analyst = crud.create_analyst(db, name="Meta Analyst")
+    source, first = crud.create_source_with_placeholder(
+        db, analyst=analyst, source_type="blog", url="https://example.com/a",
+        canonical_url="https://example.com/a", source_key="https://example.com/a",
+        title="A", content="content", blog_domain="example.com",
+    )
+    first.asset_description = "Bitcoin"
+    first.claim = "Bitcoin rises"
+    first.horizon = "swing"
+    first.status = "resolved"
+    second = crud.Claim(
+        analyst=analyst, source=source, extraction_status="complete",
+        asset_description="Bitcoin", claim="Bitcoin falls", horizon="swing", status="resolved",
+    )
+    db.add(second)
+    db.flush()
+    crud.update_claim_resolution(db, claim=first, verdict="good", rationale="up")
+    crud.update_claim_resolution(db, claim=second, verdict="bad", rationale="down")
+    db.commit()
+
+    fake = AnalystMetaAnalysis(
+        categorizations=[
+            ClaimCategorization(claim_id=first.id, category="crypto"),
+            ClaimCategorization(claim_id=second.id, category="crypto"),
+        ],
+        overall_summary="Mixed record.", strengths=["Good first call"], weaknesses=["Bad second call"],
+        consistency_notes=None,
+    )
+    monkeypatch.setattr("app.presenters.get_settings", lambda: type("Settings", (), {"anthropic_api_key": "test"})())
+    monkeypatch.setattr("app.presenters.analyze_analyst", lambda **_kwargs: fake)
+
+    response = client.get(f"/api/analysts/{analyst.id}")
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["reliability_score"] == 50.0
+    assert body["categories"] == [{"label": "crypto", "score": 50.0, "claim_count": 2, "resolved_count": 2}]
+    assert body["overall_summary"] == "Mixed record."
+    assert body["strengths"] == ["Good first call"]

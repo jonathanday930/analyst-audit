@@ -10,4 +10,9 @@ node_modules/
 dist/
 *.tsbuildinfo
 *.egg-info/
-
+backend/scripts/output/
+backend/.cache/
+promptlab/runs/
+promptlab/cache/
+evals/cache/
+.deepeval/

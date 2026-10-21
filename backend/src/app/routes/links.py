@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db import crud
-from app.db.models import Analyst
+from app.db.models import Analyst, Source
 from app.db.session import get_db
 from app.jobs.claim_finder import run_claim_finder
 from app.matching import match_analyst
@@ -75,14 +75,17 @@ def add_link(payload: LinkCreate, db: Session = Depends(get_db)) -> LinkResponse
         db.rollback()
         raise HTTPException(status_code=409, detail="This source or analyst already exists.") from exc
 
-    # Deliberately a seam only; this function is a no-op until the separately-owned finder lands.
     run_claim_finder(source.id)
+    db.expire_all()
+    persisted_source = db.get(Source, source.id)
+    persisted_claims = list(persisted_source.claims) if persisted_source else [claim]
+    completed = bool(persisted_claims) and all(item.extraction_status == "complete" for item in persisted_claims)
     return LinkResponse(
-        status="pending",
+        status="review_ready" if completed else "pending",
         source_type=source.type,
         matched_analyst=analyst_summary(analyst),
         analyst=analyst_summary(analyst),
         source_id=source.id,
-        claims=[claim_out(claim)],
-        message="Claim extraction pending",
+        claims=[claim_out(item) for item in persisted_claims],
+        message=None if completed else "Claim extraction pending",
     )

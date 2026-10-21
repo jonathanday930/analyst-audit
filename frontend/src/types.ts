@@ -51,19 +51,22 @@ export interface Claim {
   source?: Source
   asset_description?: string
   asset?: string
-  suggested_ticker?: string | null
+  suggested_ticker?: string[] | null
   ticker?: string | null
   condition?: string | null
   condition_type?: 'unconditional' | 'price_trigger' | 'event_trigger' | string
-  expected_outcome?: string
+  claim?: string
+  stated_implication?: string | null
+  grounds?: string[]
+  warrant?: string[]
+  backing?: string[]
+  qualifier?: string | null
+  confidence?: number | null
+  rebuttal_invalidation?: string[]
   outcome?: string
   horizon?: Horizon
-  timeframe_text?: string | null
-  target_window_start?: string | null
-  target_window_end?: string | null
   trigger_status?: 'waiting' | 'triggered' | 'expired' | null
   trigger_observed_at?: string | null
-  trigger_deadline?: string | null
   status: ClaimStatus
   verdict?: Verdict
   resolution?: Resolution | null

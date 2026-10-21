@@ -13,7 +13,7 @@ describe('presentation', () => {
   })
   it('formats lifecycle windows without fixture strings', () => {
     expect(windowText(claim({ trigger_status: 'waiting' }))).toBe('Trigger not yet met')
-    expect(windowText(claim({ target_window_start: null, target_window_end: null }))).toContain('Open-ended')
+    expect(windowText(claim({ horizon: 'swing' }))).toContain('SWING')
   })
   it('labels all supported horizons', () => expect(['short', 'swing', 'long'].map(horizonLabel)).toEqual(['SHORT-TERM', 'SWING', 'LONG-TERM']))
 })

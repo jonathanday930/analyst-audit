@@ -3,6 +3,8 @@ from datetime import date
 
 import yt_dlp
 
+from app.youtube.rate_limit import throttle
+
 
 class MetadataFetchError(RuntimeError):
     pass
@@ -17,6 +19,7 @@ class VideoMetadata:
 
 
 def fetch_metadata(video_id: str) -> VideoMetadata:
+    throttle()
     try:
         with yt_dlp.YoutubeDL({"skip_download": True, "quiet": True, "no_warnings": True, "extract_flat": False}) as ydl:
             info = ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}", download=False)

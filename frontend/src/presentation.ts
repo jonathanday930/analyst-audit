@@ -6,8 +6,8 @@ export const claimCount = (analyst: Analyst): number => analyst.claim_count ?? (
 export const resolvedCount = (analyst: Analyst): number => analyst.resolved_count ?? analyst.resolved ?? 0
 export const openCount = (analyst: Analyst): number => analyst.open_count ?? analyst.open ?? 0
 export const asset = (claim: Claim): string => claim.asset_description ?? claim.asset ?? 'Pending claim'
-export const ticker = (claim: Claim): string => claim.suggested_ticker ?? claim.ticker ?? '—'
-export const outcome = (claim: Claim): string => claim.expected_outcome ?? claim.outcome ?? claim.pending_message ?? 'Claim extraction pending'
+export const ticker = (claim: Claim): string => claim.suggested_ticker?.join(', ') ?? claim.ticker ?? '—'
+export const outcome = (claim: Claim): string => claim.claim ?? claim.outcome ?? claim.pending_message ?? 'Claim extraction pending'
 
 export function scoreTone(value: number | null): 'good' | 'mid' | 'bad' | 'pending' {
   if (value === null) return 'pending'
@@ -32,13 +32,11 @@ export function formatDate(value?: string | null): string {
 export function windowText(claim: Claim): string {
   if (claim.trigger_status === 'expired' || claim.status === 'expired') return 'Trigger deadline passed — condition never triggered'
   if (claim.trigger_status === 'waiting') return 'Trigger not yet met'
-  if (!claim.target_window_start && !claim.target_window_end) return 'Open-ended — rechecked periodically'
-  return [formatDate(claim.target_window_start), formatDate(claim.target_window_end)].join(' – ')
+  return claim.horizon ? horizonLabel(claim.horizon) + ' — rechecked periodically' : 'Open-ended — rechecked periodically'
 }
 export function openNote(claim: Claim): string {
   if (claim.status === 'pending') return claim.pending_message ?? 'Claim extraction is pending. It will appear in the ledger when the claim finder is connected.'
   if (claim.status === 'expired') return 'The condition never triggered before its deadline. This claim expired unevaluated and is not scored.'
   if (claim.trigger_status === 'waiting') return 'The condition has not triggered yet. It will be checked until the trigger deadline passes.'
-  if (!claim.target_window_start && !claim.target_window_end) return 'No fixed target date. The analyzer rechecks this claim periodically.'
-  return 'The target window has not arrived yet. The analyzer will resolve this claim once it does.'
+  return 'No fixed target date is stored. The analyzer derives a rough window from the horizon and rechecks this claim periodically.'
 }

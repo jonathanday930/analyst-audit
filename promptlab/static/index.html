@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AnalystAudit prompt lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">AA</span>
+    <div>
+      <h1>Prompt lab</h1>
+      <p>Edit a pass's system prompt, run it against a real source, keep the log.</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button id="clear-cache" class="ghost" title="Forget every cached transcript/article so the next run refetches">Clear source cache</button>
+  </div>
+</header>
+
+<div id="pin-banner" class="pin-banner" hidden>
+  <span>📌 <strong id="pin-banner-text"></strong> — claim finder will not run this pass.</span>
+  <button id="unpin-claims" class="ghost small">Unpin</button>
+</div>
+
+<section class="runbar">
+  <div class="field grow">
+    <label for="url">Video or blog URL</label>
+    <input type="text" id="url" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off" spellcheck="false">
+  </div>
+  <div class="field">
+    <label for="analyst">Analyst label</label>
+    <input type="text" id="analyst" placeholder="(unlabeled)" autocomplete="off">
+  </div>
+  <div class="field">
+    <label for="mode">Mode</label>
+    <select id="mode">
+      <option value="raw">Raw output (no schema)</option>
+      <option value="pipeline">Full pipeline (schema)</option>
+    </select>
+  </div>
+  <div class="toggles" id="mode-toggles"></div>
+  <button id="run" class="primary">Run <span class="kbd">⌘↵</span></button>
+</section>
+<p class="modebar" id="mode-note"></p>
+
+<main class="split">
+
+  <section class="pane pane-editor">
+    <div class="pane-head">
+      <nav class="tabs" id="pass-tabs"></nav>
+    </div>
+
+    <div class="editor-meta">
+      <p class="blurb" id="pass-blurb"></p>
+      <div class="editor-controls">
+        <div class="field">
+          <label for="model">Model</label>
+          <select id="model"></select>
+        </div>
+        <div class="field grow">
+          <label for="version">Saved version</label>
+          <select id="version"></select>
+        </div>
+        <button id="reset-default" class="ghost" title="Discard edits and reload the prompt that's in the code">Reset to code</button>
+      </div>
+    </div>
+
+    <textarea id="prompt" spellcheck="false" placeholder="Loading prompt..."></textarea>
+
+    <div class="editor-foot">
+      <span class="hint" id="prompt-stats"></span>
+      <div class="editor-foot-actions">
+        <input type="text" id="version-name" placeholder="Name this version" autocomplete="off">
+        <button id="save-version" class="ghost">Save</button>
+        <button id="delete-version" class="ghost danger" title="Delete the selected saved version">Delete</button>
+      </div>
+    </div>
+    <p class="hint source-note" id="pass-module"></p>
+  </section>
+
+  <section class="pane pane-results">
+    <div class="pane-head">
+      <nav class="tabs" id="result-tabs">
+        <button data-view="output" class="active">Output</button>
+        <button data-view="markdown">Markdown</button>
+        <button data-view="runs">Past runs</button>
+      </nav>
+      <a id="open-report" class="ghost-link" target="_blank" rel="noopener" hidden>Styled report ↗</a>
+    </div>
+
+    <div id="status" class="status idle">
+      <span class="status-dot"></span>
+      <span id="status-text">Idle. Paste a URL and hit Run.</span>
+    </div>
+
+    <details id="steps-wrap" class="steps-wrap" hidden>
+      <summary id="steps-summary">Run log</summary>
+      <ol id="steps" class="steps"></ol>
+    </details>
+
+    <div id="files" class="files" hidden>
+      <div class="files-head">
+        <strong>Bring this into Claude Code</strong>
+        <button id="copy-prompt" class="ghost small">Copy the ask</button>
+      </div>
+      <code id="claude-ask"></code>
+      <ul class="file-list" id="file-list"></ul>
+    </div>
+
+    <div class="view" id="view-output"></div>
+    <template id="tpl-raw-pass">
+      <section class="raw-pass">
+        <div class="raw-head">
+          <h3></h3>
+          <div class="raw-actions"><span class="raw-meta"></span><button class="ghost small raw-copy">Copy</button></div>
+        </div>
+        <details class="raw-thinking" hidden><summary>Model's thinking</summary><pre></pre></details>
+        <pre class="raw-text"></pre>
+      </section>
+    </template>
+    <div class="view" id="view-markdown" hidden>
+      <div class="md-actions">
+        <button id="copy-markdown" class="ghost small">Copy all</button>
+      </div>
+      <pre id="markdown-body" class="md-body"></pre>
+    </div>
+    <div class="view" id="view-runs" hidden></div>
+  </section>
+
+</main>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

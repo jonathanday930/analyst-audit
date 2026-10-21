@@ -44,27 +44,48 @@ def upgrade() -> None:
     op.create_index("ix_sources_youtube_channel_id", "sources", ["youtube_channel_id"])
     op.create_index("ix_sources_blog_domain", "sources", ["blog_domain"])
     op.create_table(
+        "stances",
+        sa.Column("id", sa.String(36), primary_key=True),
+        sa.Column("analyst_id", sa.String(36), sa.ForeignKey("analysts.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("source_id", sa.String(36), sa.ForeignKey("sources.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("kind", sa.String(20), nullable=False),
+        sa.Column("asset_description", sa.Text()),
+        sa.Column("suggested_ticker", sa.String(20)),
+        sa.Column("direction", sa.String(20)),
+        sa.Column("sentiment", sa.String(20)),
+        sa.Column("scope", sa.Text()),
+        sa.Column("supporting_quotes", sa.JSON(), nullable=False, server_default=sa.text("'[]'")),
+        sa.Column("stated_at", sa.Date()),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.CheckConstraint("kind IN ('position', 'sentiment')", name="ck_stances_kind"),
+        sa.CheckConstraint("direction IN ('long', 'short', 'exited') OR direction IS NULL", name="ck_stances_direction"),
+        sa.CheckConstraint("sentiment IN ('bullish', 'neutral', 'bearish', 'uncertain') OR sentiment IS NULL", name="ck_stances_sentiment"),
+    )
+    op.create_index("ix_stances_analyst_stated", "stances", ["analyst_id", "stated_at"])
+    op.create_table(
         "claims",
         sa.Column("id", sa.String(36), primary_key=True),
         sa.Column("source_id", sa.String(36), sa.ForeignKey("sources.id", ondelete="CASCADE"), nullable=False),
         sa.Column("analyst_id", sa.String(36), sa.ForeignKey("analysts.id", ondelete="CASCADE"), nullable=False),
         sa.Column("extraction_status", sa.String(20), nullable=False),
-        sa.Column("asset_description", sa.Text()), sa.Column("suggested_ticker", sa.String(30)),
-        sa.Column("condition_trigger", sa.Text()), sa.Column("expected_outcome", sa.Text()),
-        sa.Column("horizon", sa.String(20)), sa.Column("timeframe_as_stated", sa.Text()),
-        sa.Column("target_window_start", sa.Date()), sa.Column("target_window_end", sa.Date()),
+        sa.Column("asset_description", sa.Text()), sa.Column("suggested_ticker", sa.JSON()),
+        sa.Column("condition_trigger", sa.JSON(), nullable=False, server_default=sa.text("'[]'")),
+        sa.Column("claim", sa.Text()), sa.Column("stated_implication", sa.Text()),
+        sa.Column("grounds", sa.JSON(), nullable=False, server_default=sa.text("'[]'")),
+        sa.Column("warrant", sa.JSON(), nullable=False, server_default=sa.text("'[]'")),
+        sa.Column("backing", sa.JSON(), nullable=False, server_default=sa.text("'[]'")),
+        sa.Column("qualifier", sa.Text()), sa.Column("confidence", sa.Float()),
+        sa.Column("rebuttal_invalidation", sa.JSON(), nullable=False, server_default=sa.text("'[]'")),
+        sa.Column("horizon", sa.String(20)),
         sa.Column("trigger_status", sa.String(20)), sa.Column("trigger_observed_at", sa.DateTime(timezone=True)),
-        sa.Column("trigger_deadline", sa.Date()), sa.Column("status", sa.String(20), nullable=False),
+        sa.Column("status", sa.String(20), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False), sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.CheckConstraint("status IN ('open', 'resolved', 'expired')", name="ck_claims_status"),
         sa.CheckConstraint("extraction_status IN ('pending', 'complete', 'failed')", name="ck_claims_extraction_status"),
         sa.CheckConstraint("trigger_status IN ('waiting', 'triggered', 'expired') OR trigger_status IS NULL", name="ck_claims_trigger_status"),
         sa.CheckConstraint("horizon IN ('short-term', 'swing', 'long-term', 'structural') OR horizon IS NULL", name="ck_claims_horizon"),
-        sa.CheckConstraint("target_window_end IS NULL OR target_window_start IS NULL OR target_window_end >= target_window_start", name="ck_claims_target_window_order"),
     )
     op.create_index("ix_claims_analyst_status", "claims", ["analyst_id", "status"])
-    op.create_index("ix_claims_target_window_end", "claims", ["target_window_end"])
-    op.create_index("ix_claims_trigger_deadline", "claims", ["trigger_deadline"])
     op.create_table(
         "claim_evaluations",
         sa.Column("id", sa.String(36), primary_key=True),
@@ -78,6 +99,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table("claim_evaluations")
+    op.drop_table("stances")
     op.drop_table("claims")
     op.drop_table("sources")
     op.drop_table("analysts")

@@ -1,0 +1,9 @@
+{
+  "id": "reasoning-fields-v1",
+  "pass_id": "claim_finder",
+  "name": "Reasoning fields v1",
+  "model": "claude-sonnet-5",
+  "note": "Supersedes the older saved claim-finder draft; production defaults live in backend/src/app/llm/claim_finder.py.",
+  "prompt": "Use the production claim-finder prompt as the baseline. Return one or more Yahoo Finance ticker guesses as a list or null; require at least one ground and one warrant for every claim. Preserve the analyst's claim, condition trigger, implication, backing, qualifier, confidence, invalidation context, and horizon without inventing unsupported facts.",
+  "saved_at": "2026-09-08T00:00:00+00:00"
+}
